@@ -80,6 +80,11 @@ export default function Signup() {
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">
                             {error}
+                            {error.includes('already exists') && (
+                                <Link to="/login" className="block mt-2 font-semibold text-brand-red hover:underline">
+                                    → Sign in to your account
+                                </Link>
+                            )}
                         </div>
                     )}
 

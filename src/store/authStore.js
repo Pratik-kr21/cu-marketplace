@@ -41,6 +41,13 @@ export const useAuthStore = create((set, get) => ({
             options: { data: { full_name, uid, department, hostel } }
         })
         if (error) throw error
+
+        // Supabase silently re-sends a confirmation email for duplicate accounts
+        // instead of throwing an error. Detect this via empty identities array.
+        if (data?.user && data.user.identities?.length === 0) {
+            throw new Error('An account with this email already exists. Please sign in instead.')
+        }
+
         return data
     },
 

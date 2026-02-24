@@ -31,8 +31,9 @@ export default function CreateListing() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm({ resolver: zodResolver(schema), defaultValues: { listing_type: 'sell' } })
+    const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm({ resolver: zodResolver(schema), defaultValues: { listing_type: 'sell' } })
     const listingType = watch('listing_type')
+    const [imageError, setImageError] = useState('')
 
     const handleImageAdd = (e) => {
         const files = Array.from(e.target.files)
@@ -122,7 +123,19 @@ export default function CreateListing() {
                             </div>
                             <p className="text-xs text-gray-400 mt-2">Good photos get 3× more responses. JPG, PNG up to 10MB.</p>
                         </div>
-                        <Button type="button" size="lg" className="w-full" onClick={() => setStep(1)}>Continue →</Button>
+                        {imageError && (
+                            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                📷 {imageError}
+                            </p>
+                        )}
+                        <Button type="button" size="lg" className="w-full" onClick={() => {
+                            if (images.length === 0) {
+                                setImageError('Please upload at least one photo of your item.')
+                                return
+                            }
+                            setImageError('')
+                            setStep(1)
+                        }}>Continue →</Button>
                     </div>
                 )}
 
@@ -145,7 +158,10 @@ export default function CreateListing() {
                         </Select>
                         <div className="flex gap-3">
                             <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={() => setStep(0)}>← Back</Button>
-                            <Button type="button" size="lg" className="flex-1" onClick={() => setStep(2)}>Continue →</Button>
+                            <Button type="button" size="lg" className="flex-1" onClick={async () => {
+                                const valid = await trigger(['title', 'description', 'category', 'condition'])
+                                if (valid) setStep(2)
+                            }}>Continue →</Button>
                         </div>
                     </div>
                 )}
