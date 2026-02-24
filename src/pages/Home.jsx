@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, ShieldCheck, ArrowRightLeft, MapPin, TrendingUp, BookOpen, Laptop, Shirt, Coffee, Dumbbell } from 'lucide-react'
+import { ArrowRight, ShieldCheck, ArrowRightLeft, MapPin, TrendingUp, BookOpen, Laptop, Shirt, Coffee, Dumbbell, Plus } from 'lucide-react'
 import { useItemStore } from '../store/itemStore'
 import { useEffect } from 'react'
 import ItemCard from '../components/marketplace/ItemCard'
+import { useAuthStore } from '../store/authStore'
 
 const categories = [
     { label: 'Textbooks', icon: BookOpen, color: 'bg-blue-50 text-blue-600', link: '?category=Textbooks' },
@@ -21,6 +22,7 @@ const features = [
 
 export default function Home() {
     const { items, fetchItems, loading } = useItemStore()
+    const { user } = useAuthStore()
 
     useEffect(() => { fetchItems() }, [])
 
@@ -50,9 +52,15 @@ export default function Home() {
                             <Link to="/marketplace" className="inline-flex items-center justify-center gap-2 bg-brand-red hover:bg-brand-dark text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-lg">
                                 Browse Listings <ArrowRight className="w-4 h-4" />
                             </Link>
-                            <Link to="/signup" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-lg transition-colors border border-white/20">
-                                Join Free — @cuchd.in only
-                            </Link>
+                            {user ? (
+                                <Link to="/create-listing" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-lg transition-colors border border-white/20">
+                                    <Plus className="w-4 h-4" /> Sell / Barter an Item
+                                </Link>
+                            ) : (
+                                <Link to="/signup" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-lg transition-colors border border-white/20">
+                                    Join Free — @cuchd.in only
+                                </Link>
+                            )}
                         </div>
                         <div className="flex items-center gap-6 mt-8 text-sm text-gray-400">
                             <span>✓ 100% free to use</span>
