@@ -50,4 +50,14 @@ export const useItemStore = create((set, get) => ({
         set(state => ({ items: [data, ...state.items] }))
         return data
     },
+
+    deleteItem: async (itemId) => {
+        if (!isSupabaseConfigured) {
+            set(state => ({ items: state.items.filter(i => i.id !== itemId) }))
+            return
+        }
+        const { error } = await supabase.from('items').delete().eq('id', itemId)
+        if (error) throw error
+        set(state => ({ items: state.items.filter(i => i.id !== itemId) }))
+    },
 }))

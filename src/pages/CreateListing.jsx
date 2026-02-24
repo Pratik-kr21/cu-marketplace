@@ -57,16 +57,34 @@ export default function CreateListing() {
         return Object.keys(errs).length === 0
     }
 
-    const handleImageAdd = (e) => {
-        const files = Array.from(e.target.files)
-        files.forEach(file => {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                // Store as base64 so it can be saved to the database
-                setImages(prev => prev.length < 5 ? [...prev, { url: reader.result, file }] : prev)
+    // Resize + compress image via canvas before storing as base64
+    const compressImage = (file) => new Promise((resolve) => {
+        const img = new Image()
+        const objectUrl = URL.createObjectURL(file)
+        img.onload = () => {
+            const MAX = 800
+            let { width, height } = img
+            if (width > MAX || height > MAX) {
+                if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+                else { width = Math.round(width * MAX / height); height = MAX }
             }
-            reader.readAsDataURL(file)
-        })
+            const canvas = document.createElement('canvas')
+            canvas.width = width
+            canvas.height = height
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+            URL.revokeObjectURL(objectUrl)
+            resolve(canvas.toDataURL('image/jpeg', 0.6))  // 60% quality JPEG
+        }
+        img.src = objectUrl
+    })
+
+    const handleImageAdd = async (e) => {
+        const files = Array.from(e.target.files)
+        for (const file of files) {
+            if (images.length >= 5) break
+            const compressed = await compressImage(file)
+            setImages(prev => prev.length < 5 ? [...prev, { url: compressed, file }] : prev)
+        }
     }
 
     const onSubmit = async (data) => {

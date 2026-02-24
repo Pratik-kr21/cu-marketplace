@@ -31,8 +31,25 @@ export const useAuthStore = create((set, get) => ({
     },
 
     fetchProfile: async (userId) => {
-        const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-        if (data) set({ profile: data })
+        const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+        if (data) {
+            set({ profile: data })
+        } else {
+            // No profile row yet (user signed up before the DB trigger was added)
+            // Create it now from auth metadata
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: newProfile } = await supabase.from('profiles').upsert({
+                    id: user.id,
+                    email: user.email,
+                    full_name: user.user_metadata?.full_name,
+                    uid: user.user_metadata?.uid,
+                    department: user.user_metadata?.department,
+                    hostel: user.user_metadata?.hostel,
+                }, { onConflict: 'id' }).select().maybeSingle()
+                if (newProfile) set({ profile: newProfile })
+            }
+        }
     },
 
     signUp: async ({ email, password, full_name, uid, department, hostel }) => {
