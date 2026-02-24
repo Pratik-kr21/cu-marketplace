@@ -43,7 +43,7 @@ Built to help CU students buy, sell, and trade textbooks, lab equipment, electro
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/cu-marketplace.git
+git clone https://github.com/Pratik-kr21/cu-marketplace.git
 cd cu-marketplace
 ```
 
