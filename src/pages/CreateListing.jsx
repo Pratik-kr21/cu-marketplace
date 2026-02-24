@@ -31,9 +31,30 @@ export default function CreateListing() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
 
-    const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm({ resolver: zodResolver(schema), defaultValues: { listing_type: 'sell' } })
+    const { register, handleSubmit, watch, formState: { errors } } = useForm({ resolver: zodResolver(schema), defaultValues: { listing_type: 'sell' } })
     const listingType = watch('listing_type')
     const [imageError, setImageError] = useState('')
+    const [detailErrors, setDetailErrors] = useState({})
+
+    // Watch all detail fields live so we can validate them manually
+    const watchedTitle = watch('title')
+    const watchedDesc = watch('description')
+    const watchedCat = watch('category')
+    const watchedCond = watch('condition')
+
+    const validateDetails = () => {
+        const errs = {}
+        if (!watchedTitle || watchedTitle.trim().length < 5)
+            errs.title = 'Title must be at least 5 characters.'
+        if (!watchedDesc || watchedDesc.trim().length < 20)
+            errs.description = 'Description must be at least 20 characters.'
+        if (!watchedCat)
+            errs.category = 'Please select a category.'
+        if (!watchedCond)
+            errs.condition = 'Please select a condition.'
+        setDetailErrors(errs)
+        return Object.keys(errs).length === 0
+    }
 
     const handleImageAdd = (e) => {
         const files = Array.from(e.target.files)
@@ -142,25 +163,36 @@ export default function CreateListing() {
                 {/* Step 1: Details */}
                 {step === 1 && (
                     <div className="space-y-4 animate-fade-in">
-                        <Input label="Title *" placeholder="e.g. RD Sharma Maths Textbook 3rd Sem" error={errors.title?.message} {...register('title')} />
-                        <Textarea label="Description *" placeholder="Describe your item — condition details, how old it is, any issues..." rows={4} error={errors.description?.message} {...register('description')} />
-                        <Select label="Category *" error={errors.category?.message} {...register('category')}>
-                            <option value="">Select category...</option>
-                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </Select>
-                        <Select label="Condition *" error={errors.condition?.message} {...register('condition')}>
-                            <option value="">Select condition...</option>
-                            {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                        </Select>
+                        <div>
+                            <Input label="Title *" placeholder="e.g. RD Sharma Maths Textbook 3rd Sem" {...register('title')} />
+                            {detailErrors.title && <p className="text-xs text-red-500 mt-1">{detailErrors.title}</p>}
+                        </div>
+                        <div>
+                            <Textarea label="Description *" placeholder="Describe your item — condition details, how old it is, any issues..." rows={4} {...register('description')} />
+                            {detailErrors.description && <p className="text-xs text-red-500 mt-1">{detailErrors.description}</p>}
+                        </div>
+                        <div>
+                            <Select label="Category *" {...register('category')}>
+                                <option value="">Select category...</option>
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </Select>
+                            {detailErrors.category && <p className="text-xs text-red-500 mt-1">{detailErrors.category}</p>}
+                        </div>
+                        <div>
+                            <Select label="Condition *" {...register('condition')}>
+                                <option value="">Select condition...</option>
+                                {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            </Select>
+                            {detailErrors.condition && <p className="text-xs text-red-500 mt-1">{detailErrors.condition}</p>}
+                        </div>
                         <Select label="Your Hostel Area" {...register('hostel_area')}>
                             <option value="">Select hostel...</option>
                             {CU_HOSTELS.map(h => <option key={h} value={h}>{h}</option>)}
                         </Select>
                         <div className="flex gap-3">
                             <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={() => setStep(0)}>← Back</Button>
-                            <Button type="button" size="lg" className="flex-1" onClick={async () => {
-                                const valid = await trigger(['title', 'description', 'category', 'condition'])
-                                if (valid) setStep(2)
+                            <Button type="button" size="lg" className="flex-1" onClick={() => {
+                                if (validateDetails()) setStep(2)
                             }}>Continue →</Button>
                         </div>
                     </div>
