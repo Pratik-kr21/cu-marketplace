@@ -37,7 +37,7 @@ export default function Footer() {
                 </div>
                 <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p className="text-xs text-gray-500">© 2026 CU Marketplace. Made with <Heart className="w-3 h-3 inline text-brand-red" /> for CU students.</p>
-                    <p className="text-xs text-gray-500">Developed by <a href="https://github.com/Pratik-kr21" className="hover:text-white transition-colors">Pratik</a></p>
+                    <p className="text-xs text-gray-500">Developed by <a href="https://github.com/Pratik-kr21" className="hover:text-white transition-colors">Pratik kumar</a></p>
                 </div>
             </div>
         </footer>
