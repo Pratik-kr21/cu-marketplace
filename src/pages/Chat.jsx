@@ -3,7 +3,7 @@ import { Send, MessageCircle, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import Avatar from '../components/ui/Avatar'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Button from '../components/ui/Button'
 
 function timeAgo(dateStr) {
@@ -18,8 +18,9 @@ function timeAgo(dateStr) {
 
 export default function Chat() {
     const { user, profile } = useAuthStore()
+    const location = useLocation()
     const [conversations, setConversations] = useState([])
-    const [activeId, setActiveId] = useState(null)
+    const [activeId, setActiveId] = useState(location.state?.conversationId || null)
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
     const [loadingConvos, setLoadingConvos] = useState(true)
@@ -55,6 +56,7 @@ export default function Chat() {
             const { data, error } = await Promise.race([query, timeout])
             const list = error ? [] : (data || [])
             setConversations(list)
+            // Only auto-select first conversation if none is pre-selected via navigation state
             if (list.length > 0 && !activeId) setActiveId(list[0].id)
         } catch {
             setConversations([])
@@ -117,9 +119,18 @@ export default function Chat() {
         const optimistic = { id: `opt-${Date.now()}`, content: text, sender_id: user.id, created_at: new Date().toISOString() }
         setMessages(prev => [...prev, optimistic])
         try {
+            const activeConvoData = conversations.find(c => c.id === activeId)
+            const receiverId = activeConvoData
+                ? (activeConvoData.buyer?.id === user.id ? activeConvoData.seller?.id : activeConvoData.buyer?.id)
+                : null
             const { error } = await supabase
                 .from('messages')
-                .insert({ conversation_id: activeId, sender_id: user.id, content: text })
+                .insert({
+                    conversation_id: activeId,
+                    sender_id: user.id,
+                    receiver_id: receiverId,
+                    content: text
+                })
             if (error) throw error
         } catch (err) {
             console.error('Send failed:', err)
