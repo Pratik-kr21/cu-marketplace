@@ -34,6 +34,7 @@ export default function CreateListing() {
     const { register, handleSubmit, watch, formState: { errors } } = useForm({ resolver: zodResolver(schema), defaultValues: { listing_type: 'sell' } })
     const listingType = watch('listing_type')
     const [imageError, setImageError] = useState('')
+    const [submitError, setSubmitError] = useState('')
     const [detailErrors, setDetailErrors] = useState({})
 
     // Watch all detail fields live so we can validate them manually
@@ -59,13 +60,18 @@ export default function CreateListing() {
     const handleImageAdd = (e) => {
         const files = Array.from(e.target.files)
         files.forEach(file => {
-            const url = URL.createObjectURL(file)
-            setImages(prev => [...prev.slice(0, 4), { url, file }])
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                // Store as base64 so it can be saved to the database
+                setImages(prev => prev.length < 5 ? [...prev, { url: reader.result, file }] : prev)
+            }
+            reader.readAsDataURL(file)
         })
     }
 
     const onSubmit = async (data) => {
         setLoading(true)
+        setSubmitError('')
         try {
             const itemData = {
                 title: data.title,
@@ -77,13 +83,13 @@ export default function CreateListing() {
                 accept_hybrid: data.listing_type === 'both',
                 is_free: Number(data.price) === 0 && data.listing_type !== 'barter',
                 hostel_area: data.hostel_area || profile?.hostel || '',
-                images: images.map(i => i.url),
+                images: images.map(i => i.url),  // base64 strings
             }
             await createItem(itemData, user.id)
             setSuccess(true)
             setTimeout(() => navigate('/marketplace'), 2000)
         } catch (err) {
-            alert('Error creating listing: ' + err.message)
+            setSubmitError(err.message || 'Failed to post listing. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -222,6 +228,11 @@ export default function CreateListing() {
                                 ✓ You can edit or remove your listing at any time.
                             </p>
                         </div>
+                        {submitError && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
+                                ⚠️ {submitError}
+                            </div>
+                        )}
                         <div className="flex gap-3">
                             <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={() => setStep(1)}>← Back</Button>
                             <Button type="submit" size="lg" loading={loading} className="flex-1">Post Listing 🎉</Button>
