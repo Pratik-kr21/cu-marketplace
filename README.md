@@ -15,8 +15,9 @@ Built to help CU students buy, sell, and trade textbooks, lab equipment, electro
 | 🔍 **Search & Filter** | Filter by category, price range, condition, and hostel proximity |
 | 🔄 **Barter System** | Propose trades (item-for-item or item + cash top-up) |
 | 💬 **Real-time Chat** | In-app messaging between buyer and seller via Supabase Realtime |
+| 🔔 **Push Notifications** | Browser push alerts for new messages and trade requests (PWA) |
 | 👤 **Student Profiles** | Department, hostel, UID, seller ratings, and listing history |
-| 📱 **PWA Ready** | Installable as a mobile app on Android & iOS |
+| 📱 **PWA Ready** | Installable as a mobile app on Android & iOS with offline support |
 
 ---
 
@@ -63,6 +64,9 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 > Get these from your Supabase project → **Settings → API**.
+
+> **Push Notifications** also require VAPID keys set as Supabase Edge Function secrets:
+> `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`. Generate with `npx web-push generate-vapid-keys`.
 
 ### 4. Run the dev server
 
@@ -199,9 +203,9 @@ src/
 - [x] Barter / Trade Dashboard
 - [x] Real-time chat (Supabase Realtime)
 - [x] Student profiles with ratings
-- [x] PWA support
-- [ ] RLS policies & full Supabase integration
-- [ ] Push notifications
+- [x] PWA support (installable, offline-ready)
+- [x] Push notifications (messages & trade alerts)
+- [x] RLS policies & full Supabase integration
 - [ ] Semester-end featured sales
 - [ ] Admin panel for moderation
 

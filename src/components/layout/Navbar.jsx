@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ShoppingBag, Bell, MessageCircle, User, Menu, X, Plus, LogOut, Package } from 'lucide-react'
+import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import Avatar from '../ui/Avatar'
+import NotificationBell from '../ui/NotificationBell'
 
 export default function Navbar() {
     const { user, profile, signOut, isDemo, demoLogin } = useAuthStore()
@@ -67,9 +68,7 @@ export default function Navbar() {
                             <Link to="/chat" className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors relative">
                                 <MessageCircle className="w-5 h-5" />
                             </Link>
-                            <Link to="/trades" className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                                <Bell className="w-5 h-5" />
-                            </Link>
+                            <NotificationBell />
                             {/* User menu */}
                             <div className="relative">
                                 <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">

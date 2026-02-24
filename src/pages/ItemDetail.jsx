@@ -8,6 +8,7 @@ import Avatar from '../components/ui/Avatar'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { sendPushToUser } from '../lib/pushNotifications'
 
 export default function ItemDetail() {
     const { id } = useParams()
@@ -97,6 +98,14 @@ export default function ItemDetail() {
                     status: 'pending',
                 })
                 if (error) throw error
+                // Notify the seller (fire-and-forget)
+                const buyerName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
+                sendPushToUser(
+                    item.seller_id,
+                    `New trade request for "${item.title}"`,
+                    `${buyerName} wants to trade: ${selectedOffer?.title || 'Open offer'}`,
+                    '/trades'
+                )
             }
             setTradeSuccess(true)
             setTimeout(() => {

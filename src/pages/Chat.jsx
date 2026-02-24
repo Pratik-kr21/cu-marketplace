@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, MessageCircle, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { sendPushToUser } from '../lib/pushNotifications'
 import Avatar from '../components/ui/Avatar'
 import { Link, useLocation } from 'react-router-dom'
 import Button from '../components/ui/Button'
@@ -132,6 +133,11 @@ export default function Chat() {
                     content: text
                 })
             if (error) throw error
+            // Fire push notification to the other person (fire-and-forget)
+            if (receiverId) {
+                const senderName = profile?.full_name || user?.email?.split('@')[0] || 'Someone'
+                sendPushToUser(receiverId, `New message from ${senderName}`, text, '/chat')
+            }
         } catch (err) {
             console.error('Send failed:', err)
             setMessages(prev => prev.filter(m => m.id !== optimistic.id))
