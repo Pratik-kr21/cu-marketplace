@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
+import { ShoppingBag } from 'lucide-react'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -15,9 +16,30 @@ import Chat from './pages/Chat'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 
+function AuthSplash() {
+    return (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900">
+            <div className="flex items-center gap-3 animate-pulse">
+                <div className="w-10 h-10 bg-brand-red rounded-xl flex items-center justify-center shadow-lg">
+                    <ShoppingBag className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-white font-bold text-xl tracking-tight">
+                    CU <span className="text-brand-red">Market</span>
+                </span>
+            </div>
+            <div className="mt-6 w-40 h-1 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-brand-red rounded-full animate-[loading_1s_ease-in-out_infinite]" />
+            </div>
+        </div>
+    )
+}
+
 export default function App() {
     const init = useAuthStore(s => s.init)
+    const loading = useAuthStore(s => s.loading)
     useEffect(() => { init() }, [])
+
+    if (loading) return <AuthSplash />
 
     return (
         <BrowserRouter>
