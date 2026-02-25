@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Upload, X, CheckCircle } from 'lucide-react'
+import { Upload, X, CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useItemStore } from '../store/itemStore'
 import { CATEGORIES, CONDITIONS, CU_HOSTELS } from '../lib/validators'
+import { uploadImageToStorage, validateImageFile, deleteImagesFromStorage, MAX_IMAGES_PER_LISTING } from '../lib/imageUpload'
+import { isSupabaseConfigured } from '../lib/supabase'
 import Button from '../components/ui/Button'
 import Input, { Textarea, Select } from '../components/ui/Input'
 
@@ -27,7 +29,7 @@ export default function CreateListing() {
     const { user, profile } = useAuthStore()
     const { createItem } = useItemStore()
     const [step, setStep] = useState(0)
-    const [images, setImages] = useState([])
+    const [images, setImages] = useState([])  // { localPreview, uploadStatus, publicUrl, file }
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
 
@@ -57,40 +59,101 @@ export default function CreateListing() {
         return Object.keys(errs).length === 0
     }
 
-    // Resize + compress image via canvas before storing as base64
-    const compressImage = (file) => new Promise((resolve) => {
-        const img = new Image()
-        const objectUrl = URL.createObjectURL(file)
-        img.onload = () => {
-            const MAX = 800
-            let { width, height } = img
-            if (width > MAX || height > MAX) {
-                if (width > height) { height = Math.round(height * MAX / width); width = MAX }
-                else { width = Math.round(width * MAX / height); height = MAX }
-            }
-            const canvas = document.createElement('canvas')
-            canvas.width = width
-            canvas.height = height
-            canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-            URL.revokeObjectURL(objectUrl)
-            resolve(canvas.toDataURL('image/jpeg', 0.6))  // 60% quality JPEG
-        }
-        img.src = objectUrl
-    })
-
+    // Handle image selection — validate, create local preview
     const handleImageAdd = async (e) => {
         const files = Array.from(e.target.files)
+        setImageError('')
+
         for (const file of files) {
-            if (images.length >= 5) break
-            const compressed = await compressImage(file)
-            setImages(prev => prev.length < 5 ? [...prev, { url: compressed, file }] : prev)
+            if (images.length >= MAX_IMAGES_PER_LISTING) {
+                setImageError(`Maximum ${MAX_IMAGES_PER_LISTING} images allowed.`)
+                break
+            }
+
+            // Client-side validation
+            const error = validateImageFile(file)
+            if (error) {
+                setImageError(error)
+                continue
+            }
+
+            // Create local preview
+            const localPreview = URL.createObjectURL(file)
+            setImages(prev => {
+                if (prev.length >= MAX_IMAGES_PER_LISTING) return prev
+                return [...prev, {
+                    localPreview,
+                    file,
+                    uploadStatus: 'pending', // pending | compressing | uploading | done | error
+                    publicUrl: null,
+                    error: null,
+                }]
+            })
         }
+
+        // Reset input
+        e.target.value = ''
+    }
+
+    const removeImage = (index) => {
+        setImages(prev => {
+            const removed = prev[index]
+            if (removed?.localPreview) URL.revokeObjectURL(removed.localPreview)
+            // If already uploaded to Supabase Storage, delete (fire-and-forget)
+            if (removed?.publicUrl) {
+                deleteImagesFromStorage([removed.publicUrl]).catch(() => { })
+            }
+            return prev.filter((_, i) => i !== index)
+        })
+    }
+
+    // Upload all pending images to Supabase Storage
+    const uploadAllImages = async () => {
+        const uploadPromises = images.map(async (img, index) => {
+            if (img.publicUrl) return img // Already uploaded
+
+            try {
+                setImages(prev => prev.map((im, i) =>
+                    i === index ? { ...im, uploadStatus: 'compressing' } : im
+                ))
+
+                const publicUrl = await uploadImageToStorage(img.file, user.id, (status) => {
+                    setImages(prev => prev.map((im, i) =>
+                        i === index ? { ...im, uploadStatus: status } : im
+                    ))
+                })
+
+                setImages(prev => prev.map((im, i) =>
+                    i === index ? { ...im, publicUrl, uploadStatus: 'done' } : im
+                ))
+
+                return { ...img, publicUrl, uploadStatus: 'done' }
+            } catch (err) {
+                setImages(prev => prev.map((im, i) =>
+                    i === index ? { ...im, uploadStatus: 'error', error: err.message } : im
+                ))
+                throw err
+            }
+        })
+
+        return Promise.all(uploadPromises)
     }
 
     const onSubmit = async (data) => {
         setLoading(true)
         setSubmitError('')
         try {
+            // Upload images to Supabase Storage first
+            let uploadedImages
+            if (isSupabaseConfigured) {
+                uploadedImages = await uploadAllImages()
+            } else {
+                // Demo mode — use local previews
+                uploadedImages = images
+            }
+
+            const imageUrls = uploadedImages.map(img => img.publicUrl || img.localPreview)
+
             const itemData = {
                 title: data.title,
                 description: data.description,
@@ -101,7 +164,7 @@ export default function CreateListing() {
                 accept_hybrid: data.listing_type === 'both',
                 is_free: Number(data.price) === 0 && data.listing_type !== 'barter',
                 hostel_area: data.hostel_area || profile?.hostel || '',
-                images: images.map(i => i.url),  // base64 strings
+                images: imageUrls,  // Supabase Storage public URLs
             }
             await createItem(itemData, user.id)
             setSuccess(true)
@@ -147,26 +210,54 @@ export default function CreateListing() {
                 {step === 0 && (
                     <div className="space-y-4 animate-fade-in">
                         <div>
-                            <label className="text-sm font-medium text-gray-700 block mb-2">Photos (up to 5)</label>
+                            <label className="text-sm font-medium text-gray-700 block mb-2">Photos (up to {MAX_IMAGES_PER_LISTING})</label>
                             <div className="grid grid-cols-3 gap-3">
                                 {images.map((img, i) => (
                                     <div key={i} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                                        <img src={img.url} className="w-full h-full object-cover" />
-                                        <button type="button" onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
+                                        <img src={img.localPreview} className="w-full h-full object-cover" alt="" />
+
+                                        {/* Upload status overlay */}
+                                        {img.uploadStatus === 'compressing' && (
+                                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                                <span className="text-xs text-white mt-1">Compressing...</span>
+                                            </div>
+                                        )}
+                                        {img.uploadStatus === 'uploading' && (
+                                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                                <span className="text-xs text-white mt-1">Uploading...</span>
+                                            </div>
+                                        )}
+                                        {img.uploadStatus === 'done' && (
+                                            <div className="absolute top-1 left-1">
+                                                <CheckCircle className="w-5 h-5 text-green-400 drop-shadow" />
+                                            </div>
+                                        )}
+                                        {img.uploadStatus === 'error' && (
+                                            <div className="absolute inset-0 bg-red-900/30 flex flex-col items-center justify-center">
+                                                <AlertCircle className="w-5 h-5 text-red-400" />
+                                                <span className="text-xs text-red-200 mt-1 px-2 text-center">{img.error}</span>
+                                            </div>
+                                        )}
+
+                                        <button type="button" onClick={() => removeImage(i)}
                                             className="absolute top-1 right-1 bg-gray-900/70 text-white rounded-full p-0.5">
                                             <X className="w-3 h-3" />
                                         </button>
                                     </div>
                                 ))}
-                                {images.length < 5 && (
+                                {images.length < MAX_IMAGES_PER_LISTING && (
                                     <label className="aspect-square bg-gray-50 border-2 border-dashed border-gray-200 hover:border-brand-red rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors group">
                                         <Upload className="w-6 h-6 text-gray-300 group-hover:text-brand-red" />
                                         <span className="text-xs text-gray-400 mt-1">Add photo</span>
-                                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageAdd} />
+                                        <input type="file" accept=".jpg,.jpeg,.webp" multiple className="hidden" onChange={handleImageAdd} />
                                     </label>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-400 mt-2">Good photos get 3× more responses. JPG, PNG up to 10MB.</p>
+                            <p className="text-xs text-gray-400 mt-2">
+                                Images auto-compressed to WebP · Max {MAX_IMAGES_PER_LISTING} photos · JPG, WebP only
+                            </p>
                         </div>
                         {imageError && (
                             <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -243,7 +334,8 @@ export default function CreateListing() {
                             <p className="text-xs text-gray-500 leading-relaxed">
                                 ✓ Your item will be visible to all verified CU students.<br />
                                 ✓ All exchanges happen on campus at safe meeting points.<br />
-                                ✓ You can edit or remove your listing at any time.
+                                ✓ You can edit or remove your listing at any time.<br />
+                                ✓ Listings auto-expire after 30 days.
                             </p>
                         </div>
                         {submitError && (
@@ -253,7 +345,9 @@ export default function CreateListing() {
                         )}
                         <div className="flex gap-3">
                             <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={() => setStep(1)}>← Back</Button>
-                            <Button type="submit" size="lg" loading={loading} className="flex-1">Post Listing 🎉</Button>
+                            <Button type="submit" size="lg" loading={loading} className="flex-1">
+                                {loading ? 'Uploading & Posting...' : 'Post Listing 🎉'}
+                            </Button>
                         </div>
                     </div>
                 )}

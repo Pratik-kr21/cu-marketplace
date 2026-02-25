@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Package, Plus, ArrowRightLeft, Star, Trash2, Tag, MapPin, AlertTriangle, X } from 'lucide-react'
 import Avatar from '../components/ui/Avatar'
 import Button from '../components/ui/Button'
+import LazyImage from '../components/ui/LazyImage'
 import { ConditionBadge } from '../components/ui/Badge'
 
 // Inline mini listing card with delete button
@@ -22,7 +23,7 @@ function MyListingCard({ item, onDelete }) {
             {/* Image */}
             <div className="relative aspect-video bg-gray-50 overflow-hidden">
                 {img ? (
-                    <img src={img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <LazyImage src={img} alt={item.title} className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
                         <Tag className="w-8 h-8 text-gray-300" />

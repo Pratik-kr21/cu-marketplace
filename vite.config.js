@@ -67,6 +67,16 @@ export default defineConfig({
             },
           },
           {
+            // Cache Supabase Storage images (listing-images bucket)
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/listing-images\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-images-cache',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 days
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             // Cache Google Fonts
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',

@@ -7,6 +7,7 @@ import Badge, { ConditionBadge } from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
+import LazyImage from '../components/ui/LazyImage'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { sendPushToUser } from '../lib/pushNotifications'
 
@@ -139,7 +140,7 @@ export default function ItemDetail() {
                 <div className="space-y-3">
                     <div className="aspect-square bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
                         {item.images?.[activeImg] ? (
-                            <img src={item.images[activeImg]} alt={item.title} className="w-full h-full object-cover" />
+                            <LazyImage src={item.images[activeImg]} alt={item.title} className="w-full h-full" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
                         )}
@@ -149,7 +150,7 @@ export default function ItemDetail() {
                             {item.images.map((img, i) => (
                                 <button key={i} onClick={() => setActiveImg(i)}
                                     className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === activeImg ? 'border-brand-red' : 'border-gray-200'}`}>
-                                    <img src={img} alt="" className="w-full h-full object-cover" />
+                                    <LazyImage src={img} alt="" className="w-full h-full" />
                                 </button>
                             ))}
                         </div>
@@ -287,7 +288,7 @@ export default function ItemDetail() {
                                         >
                                             <div className="w-10 h-10 rounded bg-gray-100 flex-shrink-0 overflow-hidden">
                                                 {mi.images?.[0]
-                                                    ? <img src={mi.images[0]} alt="" className="w-full h-full object-cover" />
+                                                    ? <LazyImage src={mi.images[0]} alt="" className="w-full h-full" />
                                                     : <div className="w-full h-full bg-gray-200" />}
                                             </div>
                                             <div className="min-w-0">

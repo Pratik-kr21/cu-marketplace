@@ -1,6 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Star, MapPin, ArrowRightLeft, Tag } from 'lucide-react'
 import Badge, { ConditionBadge } from '../ui/Badge'
+import LazyImage from '../ui/LazyImage'
 
 export default function ItemCard({ item }) {
     const navigate = useNavigate()
@@ -17,10 +18,10 @@ export default function ItemCard({ item }) {
             onClick={() => navigate(`/items/${item.id}`)}
             className="group bg-white border border-gray-200 rounded-lg shadow-card hover:shadow-card-hover hover:border-brand-red transition-all duration-150 cursor-pointer flex flex-col overflow-hidden"
         >
-            {/* Image */}
+            {/* Image — Lazy Loaded */}
             <div className="relative aspect-square bg-gray-50 overflow-hidden">
                 {img ? (
-                    <img src={img} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <LazyImage src={img} alt={item.title} className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
                         <Tag className="w-10 h-10 text-gray-300" />

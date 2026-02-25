@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { MOCK_ITEMS } from '../lib/mockData'
+import { deleteImagesFromStorage } from '../lib/imageUpload'
 
 export const useItemStore = create((set, get) => ({
     items: [],
@@ -56,6 +57,19 @@ export const useItemStore = create((set, get) => ({
             set(state => ({ items: state.items.filter(i => i.id !== itemId) }))
             return
         }
+
+        // Get the item first to find image URLs
+        const item = get().items.find(i => i.id === itemId)
+        const imageUrls = item?.images || []
+
+        // Delete images from Supabase Storage first (prevents orphans)
+        if (imageUrls.length > 0) {
+            await deleteImagesFromStorage(imageUrls).catch(err => {
+                console.warn('Failed to delete images from storage:', err)
+            })
+        }
+
+        // Delete the item from database
         const { error } = await supabase.from('items').delete().eq('id', itemId)
         if (error) throw error
         set(state => ({ items: state.items.filter(i => i.id !== itemId) }))
