@@ -10,6 +10,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
         `  VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey ? '[set]' : 'MISSING'}"\n` +
         'On Vercel: add these in Project Settings → Environment Variables, then Redeploy.'
     )
+} else {
+    // Production debug log to verify which project ref we are hitting
+    console.log('[Supabase] Initialized with URL:', supabaseUrl)
 }
 
 export const isSupabaseConfigured = Boolean(
