@@ -58,7 +58,12 @@ export const useAuthStore = create((set, get) => ({
         }
         const { data, error } = await supabase.auth.signUp({
             email, password,
-            options: { data: { full_name, uid, department, hostel } }
+            options: {
+                data: { full_name, uid, department, hostel },
+                // Redirect to the current origin so the link works on both
+                // localhost (dev) and cumarketplace.vercel.app (production)
+                emailRedirectTo: `${window.location.origin}/`,
+            }
         })
         if (error) {
             // Translate terse Supabase errors into user-friendly messages
