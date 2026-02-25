@@ -53,11 +53,21 @@ export const useAuthStore = create((set, get) => ({
     },
 
     signUp: async ({ email, password, full_name, uid, department, hostel }) => {
+        if (!isSupabaseConfigured) {
+            throw new Error('Service unavailable — environment not configured. Please contact the admin.')
+        }
         const { data, error } = await supabase.auth.signUp({
             email, password,
             options: { data: { full_name, uid, department, hostel } }
         })
-        if (error) throw error
+        if (error) {
+            // Translate terse Supabase errors into user-friendly messages
+            const msg = error.message?.toLowerCase() || ''
+            if (msg.includes('fetch') || msg.includes('network')) {
+                throw new Error('Could not connect to server. Please check your internet and try again.')
+            }
+            throw error
+        }
 
         // Supabase silently re-sends a confirmation email for duplicate accounts
         // instead of throwing an error. Detect this via empty identities array.
@@ -69,8 +79,23 @@ export const useAuthStore = create((set, get) => ({
     },
 
     signIn: async ({ email, password }) => {
+        if (!isSupabaseConfigured) {
+            throw new Error('Service unavailable — environment not configured. Please contact the admin.')
+        }
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+        if (error) {
+            const msg = error.message?.toLowerCase() || ''
+            if (msg.includes('fetch') || msg.includes('network')) {
+                throw new Error('Could not connect to server. Please check your internet and try again.')
+            }
+            if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
+                throw new Error('Incorrect email or password. Please try again.')
+            }
+            if (msg.includes('email not confirmed')) {
+                throw new Error('Please confirm your email first. Check your @cuchd.in inbox.')
+            }
+            throw error
+        }
         return data
     },
 
