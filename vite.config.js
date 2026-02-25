@@ -98,7 +98,7 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: true, // Enable SW in dev mode for testing
+        enabled: false, // Disabled in dev — SW can cache failed requests and mask errors
       },
     }),
   ],

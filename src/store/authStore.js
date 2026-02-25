@@ -63,8 +63,11 @@ export const useAuthStore = create((set, get) => ({
         if (error) {
             // Translate terse Supabase errors into user-friendly messages
             const msg = error.message?.toLowerCase() || ''
-            if (msg.includes('fetch') || msg.includes('network')) {
-                throw new Error('Could not connect to server. Please check your internet and try again.')
+            if (msg.includes('cert') || msg.includes('ssl') || msg.includes('authority')) {
+                throw new Error('SSL certificate error. If you\'re on a campus/office network, try disabling VPN or proxy, or use mobile data.')
+            }
+            if (msg.includes('fetch') || msg.includes('network') || msg.includes('failed') || msg.includes('connection')) {
+                throw new Error('Could not connect to server. Please check your internet connection and try again.')
             }
             throw error
         }
@@ -85,8 +88,11 @@ export const useAuthStore = create((set, get) => ({
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) {
             const msg = error.message?.toLowerCase() || ''
-            if (msg.includes('fetch') || msg.includes('network')) {
-                throw new Error('Could not connect to server. Please check your internet and try again.')
+            if (msg.includes('cert') || msg.includes('ssl') || msg.includes('authority')) {
+                throw new Error('SSL certificate error. If you\'re on a campus/office network, try disabling VPN or proxy, or use mobile data.')
+            }
+            if (msg.includes('fetch') || msg.includes('network') || msg.includes('failed') || msg.includes('connection')) {
+                throw new Error('Could not connect to server. Please check your internet connection and try again.')
             }
             if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
                 throw new Error('Incorrect email or password. Please try again.')
