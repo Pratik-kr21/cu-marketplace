@@ -49,16 +49,16 @@ export default function Chat() {
         }
     }, [user, activeId])
 
-    const fetchMessages = useCallback(async () => {
+    const fetchMessages = useCallback(async (isPolling = false) => {
         if (!activeId || !isBackendConfigured) return
-        setLoadingMsgs(true)
+        if (!isPolling) setLoadingMsgs(true)
         try {
             const data = await api.get(`/api/conversations/${activeId}/messages`)
             setMessages(data || [])
         } catch (err) {
             console.error('Error loading messages:', err)
         } finally {
-            setLoadingMsgs(false)
+            if (!isPolling) setLoadingMsgs(false)
         }
     }, [activeId])
 
@@ -67,7 +67,7 @@ export default function Chat() {
 
     useEffect(() => {
         if (!activeId || !isBackendConfigured) return
-        const interval = setInterval(fetchMessages, POLL_INTERVAL)
+        const interval = setInterval(() => fetchMessages(true), POLL_INTERVAL)
         return () => clearInterval(interval)
     }, [activeId, fetchMessages])
 
