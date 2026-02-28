@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+dev-dist/
+
+# Vite
+*.local
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vercel & Deployments
+.vercel/
+.output/
+
+# Testing
+coverage/
+
+# SSR
+dist-ssr/
+
+# Server Uploads (if any local uploads happen in dev)
+server/uploads/
