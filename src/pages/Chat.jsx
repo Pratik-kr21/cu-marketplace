@@ -29,7 +29,7 @@ export default function Chat() {
     const [loadingConvos, setLoadingConvos] = useState(true)
     const [loadingMsgs, setLoadingMsgs] = useState(false)
     const [sending, setSending] = useState(false)
-    const bottomRef = useRef(null)
+    const containerRef = useRef(null)
 
     const displayName =
         profile?.full_name || user?.user_metadata?.full_name ||
@@ -72,7 +72,9 @@ export default function Chat() {
     }, [activeId, fetchMessages])
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+        if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight
+        }
     }, [messages])
 
     const send = async () => {
@@ -200,7 +202,7 @@ export default function Chat() {
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                                 {loadingMsgs ? (
                                     <div className="flex justify-center h-full">
                                         <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
@@ -223,7 +225,6 @@ export default function Chat() {
                                         </div>
                                     )
                                 })}
-                                <div ref={bottomRef} />
                             </div>
 
                             <div className="px-4 py-3 border-t border-gray-100 flex gap-2">
