@@ -10,24 +10,24 @@ function itemToResponse(item) {
     const obj = item.toObject ? item.toObject() : item
 
     // Abstract the exact database schema names back to what the React frontend expects
-    const sellerId = obj.userId || obj.seller_id
-    const seller = obj.userId ? obj.userId : obj.seller_id
+    const sellerObj = obj.userId || obj.seller_id
+    const sellerIdStr = sellerObj?._id?.toString?.() || sellerObj?.toString?.() || sellerObj
     const imageUrlRef = obj.imageUrls || obj.images
 
     return {
         ...obj,
         id: obj._id.toString(),
         _id: undefined,
-        seller_id: sellerId?.toString?.() || sellerId,
+        seller_id: sellerIdStr,
         images: imageUrlRef,
         imageUrls: undefined,
         userId: undefined,
-        seller: seller ? {
-            id: seller._id?.toString?.() || seller.id,
-            full_name: seller.full_name,
-            avatar_url: seller.avatar_url,
-            department: seller.department,
-            hostel: seller.hostel,
+        seller: sellerObj ? {
+            id: sellerIdStr,
+            full_name: sellerObj.full_name,
+            avatar_url: sellerObj.avatar_url,
+            department: sellerObj.department,
+            hostel: sellerObj.hostel,
         } : undefined,
         created_at: obj.createdAt,
         createdAt: undefined,

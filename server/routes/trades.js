@@ -3,6 +3,7 @@ import Trade from '../models/Trade.js'
 import Item from '../models/Item.js'
 import User from '../models/User.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { deleteImageFromCloudinary } from '../utils/cloudinary.js'
 
 const router = Router()
 
@@ -100,6 +101,32 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         trade.status = status
         trade.updatedAt = new Date()
         await trade.save()
+
+        // 🚨 POST-TRADE DB CLEANUP
+        // If the seller just accepted this trade, the item is sold/traded.
+        // It must be erased from the database and Cloudinary to save space.
+        if (status === 'accepted') {
+            const item = await Item.findById(trade.item_id)
+            if (item) {
+                // Delete orphaned images from Cloudinary
+                const imgs = item.imageUrls?.length > 0 ? item.imageUrls : item.images
+                if (imgs && imgs.length > 0) {
+                    for (const imgUrl of imgs) {
+                        try { await deleteImageFromCloudinary(imgUrl) } catch (e) { console.error('Cloudinary cleanup error during trade accept:', e) }
+                    }
+                }
+
+                // Erase Item document
+                await Item.deleteOne({ _id: trade.item_id })
+
+                // Automatically decline all other pending trades targeting this now-deleted item
+                await Trade.updateMany(
+                    { item_id: trade.item_id, _id: { $ne: trade._id }, status: 'pending' },
+                    { $set: { status: 'declined', updatedAt: new Date() } }
+                )
+            }
+        }
+
         return res.json(tradeToResponse(trade))
     } catch (err) {
         console.error('[Trades] Update error:', err)
