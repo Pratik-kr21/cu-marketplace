@@ -39,7 +39,6 @@ router.get('/', async (req, res) => {
     try {
         const items = await Item.find({ is_available: true })
             .populate('userId', 'full_name avatar_url department hostel')
-            .populate('seller_id', 'full_name avatar_url department hostel') // Try fallbacks for old documents
             .sort({ createdAt: -1 })
             .lean()
 
