@@ -20,9 +20,14 @@ export async function apiFetch(path, options = {}) {
     const token = getToken()
     if (token) headers.Authorization = `Bearer ${token}`
 
-    const res = await fetch(url, { ...options, headers })
+    const res = await fetch(url, { ...options, headers, credentials: 'include' })
     const data = res.status === 204 ? {} : await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(data.error || res.statusText || 'Request failed')
+
+    if (!res.ok) {
+        // If the backend returns a 401 Vercel Protection HTML page instead of JSON, parse it safely
+        const errorMessage = data.error || res.statusText || (res.status === 401 ? 'Vercel Authentication Blocked API (Preview Deployment)' : 'Request failed')
+        throw new Error(errorMessage)
+    }
     return data
 }
 
