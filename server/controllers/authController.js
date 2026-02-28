@@ -58,7 +58,10 @@ export const register = async (req, res) => {
         await user.save()
 
         // Send Verification Email via Nodemailer
-        const frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:3000'
+        let frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
+        if (frontendUrl && !frontendUrl.startsWith('http')) {
+            frontendUrl = `https://${frontendUrl}`
+        }
         const verificationLink = `${frontendUrl}/verify-email?token=${rawToken}`
 
         await sendEmail({
@@ -127,7 +130,10 @@ export const verifyEmail = async (req, res) => {
 
         // Redirect if it was a GET request
         if (req.method === 'GET') {
-            const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
+            let frontendUrl = process.env.VITE_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:5173'
+            if (frontendUrl && !frontendUrl.startsWith('http')) {
+                frontendUrl = `https://${frontendUrl}`
+            }
             return res.redirect(`${frontendUrl}/verify-email?token=${token}&success=true`)
         }
 
@@ -205,7 +211,10 @@ export const resendVerification = async (req, res) => {
         await user.save()
 
         // Send Verification Email via Nodemailer
-        const frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:3000'
+        let frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
+        if (frontendUrl && !frontendUrl.startsWith('http')) {
+            frontendUrl = `https://${frontendUrl}`
+        }
         const verificationLink = `${frontendUrl}/verify-email?token=${rawToken}`
 
         await sendEmail({

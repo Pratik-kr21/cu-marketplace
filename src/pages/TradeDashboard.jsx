@@ -230,9 +230,35 @@ export default function TradeDashboard() {
                                 )}
 
                                 {trade.status === 'accepted' && (
-                                    <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-700 font-medium flex items-center gap-2">
-                                        <CheckCircle className="w-3.5 h-3.5" />
-                                        Trade accepted — message {isIncoming ? 'the buyer' : 'the seller'} to arrange the exchange!
+                                    <div className="space-y-3">
+                                        <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-700 font-medium flex gap-2">
+                                            <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                            <div>
+                                                Trade accepted! You can now message {isIncoming ? 'the buyer' : 'the seller'} to arrange the exchange.
+                                                <div className="mt-1 text-xs opacity-80 italic">
+                                                    Note: Messages are automatically deleted from the database after 24 hours for your privacy.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={async () => {
+                                                try {
+                                                    const convo = await api.post('/api/conversations/upsert', {
+                                                        item_id: trade.item?.id || trade.item_id, // Might be deleted, but track by ID
+                                                        seller_id: isIncoming ? trade.buyer_id : trade.seller_id,
+                                                    });
+                                                    window.location.href = `/chat`;
+                                                } catch (err) {
+                                                    console.error('Failed to open chat:', err);
+                                                    window.location.href = `/chat`;
+                                                }
+                                            }}
+                                        >
+                                            Message {otherPerson}
+                                        </Button>
                                     </div>
                                 )}
                             </div>
