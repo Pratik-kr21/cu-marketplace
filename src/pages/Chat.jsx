@@ -203,11 +203,7 @@ export default function Chat() {
                             </div>
 
                             <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-                                {loadingMsgs ? (
-                                    <div className="flex justify-center h-full">
-                                        <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
-                                    </div>
-                                ) : messages.length === 0 ? (
+                                {messages.length === 0 && !loadingMsgs ? (
                                     <div className="flex justify-center h-full">
                                         <p className="text-sm text-gray-400">No messages yet — say hello! 👋</p>
                                     </div>
