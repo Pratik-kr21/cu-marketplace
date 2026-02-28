@@ -31,4 +31,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
-app.listen(PORT, () => console.log(`[API] http://localhost:${PORT}`))
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`[API] http://localhost:${PORT}`))
+}
+
+export default app
