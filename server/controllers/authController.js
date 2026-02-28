@@ -1,0 +1,315 @@
+import jwt from 'jsonwebtoken'
+import User from '../models/User.js'
+import { sendEmail } from '../utils/email.js'
+import { generateVerificationToken, hashToken } from '../utils/token.js'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'secret'
+
+function signToken(user) {
+    return jwt.sign(
+        { userId: user._id.toString() },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+    )
+}
+
+function profileToJSON(user) {
+    return {
+        id: user._id.toString(),
+        email: user.email,
+        full_name: user.full_name,
+        uid: user.uid,
+        department: user.department,
+        hostel: user.hostel,
+        avatar_url: user.avatar_url,
+    }
+}
+
+// @desc    Register new user
+// @route   POST /api/auth/signup
+// @access  Public
+export const register = async (req, res) => {
+    try {
+        const { email, password, full_name, uid, department, hostel } = req.body
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' })
+        }
+
+        const existing = await User.findOne({ email: email.toLowerCase() })
+        if (existing) {
+            return res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' })
+        }
+
+        const { rawToken, hashedToken } = generateVerificationToken()
+
+        const user = new User({
+            email: email.toLowerCase(),
+            password,
+            full_name: full_name || '',
+            uid: uid || '',
+            department: department || '',
+            hostel: hostel || '',
+            isVerified: false,
+            emailVerificationToken: hashedToken,
+            emailVerificationExpires: Date.now() + 60 * 60 * 1000, // 1 hour
+            verificationRequestCount: 1,
+            lastVerificationRequest: Date.now()
+        })
+        await user.save()
+
+        // Send Verification Email via Nodemailer
+        const frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:3000'
+        const verificationLink = `${frontendUrl}/verify-email?token=${rawToken}`
+
+        await sendEmail({
+            to: user.email,
+            subject: 'Verify your CU Marketplace Account 🎓',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                    <h2 style="color: #111827; text-align: center;">Welcome to CU Marketplace!</h2>
+                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+                        You're almost there! We just need to verify your <strong>@cuchd.in</strong> email address to activate your account.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${verificationLink}" style="background-color: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                            Verify Email Address
+                        </a>
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+                        This verification link will expire in <strong>1 hour</strong>.
+                    </p>
+                    <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; word-break: break-all;">
+                        If the button doesn't work, copy and paste this link into your browser:<br/>
+                        <a href="${verificationLink}" style="color: #0b5cff;">${verificationLink}</a>
+                    </p>
+                </div>
+            `
+        })
+
+        return res.status(201).json({
+            message: 'Verification email sent. Please check your inbox.',
+            requiresVerification: true
+        })
+    } catch (err) {
+        console.error('[Auth] Signup error:', err)
+        return res.status(500).json({ error: err.message || 'Signup failed' })
+    }
+}
+
+// @desc    Verify email token
+// @route   GET or POST /api/auth/verify-email
+// @access  Public
+export const verifyEmail = async (req, res) => {
+    try {
+        const token = req.query.token || req.body.token
+        if (!token) return res.status(400).json({ error: 'Verification token is required' })
+
+        // Hash incoming token to strictly compare with stored hash
+        const hashedIncomingToken = hashToken(token)
+
+        const user = await User.findOne({
+            emailVerificationToken: hashedIncomingToken,
+            emailVerificationExpires: { $gt: Date.now() } // Ensure token is not expired
+        })
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired verification link.' })
+        }
+
+        // Set as verified and clear verification fields
+        user.isVerified = true
+        user.emailVerificationToken = null
+        user.emailVerificationExpires = null
+        await user.save()
+
+        const authToken = signToken(user)
+        const profile = profileToJSON(user)
+
+        // Redirect if it was a GET request
+        if (req.method === 'GET') {
+            const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
+            return res.redirect(`${frontendUrl}/verify-email?token=${token}&success=true`)
+        }
+
+        return res.status(200).json({
+            message: 'Email verified successfully',
+            user: {
+                id: profile.id,
+                email: profile.email,
+                user_metadata: {
+                    full_name: profile.full_name,
+                    uid: profile.uid,
+                    department: profile.department,
+                    hostel: profile.hostel
+                }
+            },
+            profile,
+            token: authToken
+        })
+    } catch (err) {
+        console.error('[Auth] Verification error:', err)
+        return res.status(500).json({ error: 'Failed to verify email' })
+    }
+}
+
+// @desc    Resend verification email
+// @route   POST /api/auth/resend-verification
+// @access  Public
+export const resendVerification = async (req, res) => {
+    try {
+        const { email } = req.body
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' })
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() })
+        if (!user) {
+            // Return success even if not found to prevent user enumeration
+            return res.status(200).json({ message: 'If that account exists, a verification email has been sent.' })
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ error: 'Account is already verified. Please sign in.' })
+        }
+
+        // Rate limit checks (Max 3 attempts per hour, 5 min cooldown)
+        const MAX_ATTEMPTS = 3
+        const COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+        const ONE_HOUR_MS = 60 * 60 * 1000 // 1 hour
+
+        const now = Date.now()
+
+        // Reset count if it's been more than an hour since the last request
+        if (user.lastVerificationRequest && (now - user.lastVerificationRequest.getTime() > ONE_HOUR_MS)) {
+            user.verificationRequestCount = 0
+        }
+
+        // Check if under cooldown
+        if (user.lastVerificationRequest && (now - user.lastVerificationRequest.getTime() < COOLDOWN_MS)) {
+            const waitMinutes = Math.ceil((COOLDOWN_MS - (now - user.lastVerificationRequest.getTime())) / 60000)
+            return res.status(429).json({ error: `Please wait ${waitMinutes} minutes before requesting another email.` })
+        }
+
+        // Check if exceeded max attempts
+        if (user.verificationRequestCount >= MAX_ATTEMPTS) {
+            return res.status(429).json({ error: 'You have exceeded the maximum resend attempts for this hour. Try again later.' })
+        }
+
+        // Generate new token & expiry
+        const { rawToken, hashedToken } = generateVerificationToken()
+        user.emailVerificationToken = hashedToken
+        user.emailVerificationExpires = new Date(Date.now() + ONE_HOUR_MS) // 1 Hour
+        user.verificationRequestCount += 1
+        user.lastVerificationRequest = new Date()
+
+        await user.save()
+
+        // Send Verification Email via Nodemailer
+        const frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:3000'
+        const verificationLink = `${frontendUrl}/verify-email?token=${rawToken}`
+
+        await sendEmail({
+            to: user.email,
+            subject: 'Verify your CU Marketplace Account 🎓',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                    <h2 style="color: #111827; text-align: center;">Welcome to CU Marketplace!</h2>
+                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+                        You're almost there! We just need to verify your <strong>@cuchd.in</strong> email address to activate your account.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${verificationLink}" style="background-color: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                            Verify Email Address
+                        </a>
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+                        This verification link will expire in <strong>1 hour</strong>.
+                    </p>
+                    <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; word-break: break-all;">
+                        If the button doesn't work, copy and paste this link into your browser:<br/>
+                        <a href="${verificationLink}" style="color: #0b5cff;">${verificationLink}</a>
+                    </p>
+                </div>
+            `
+        })
+
+        return res.status(200).json({ message: 'A new verification email has been sent.' })
+    } catch (err) {
+        console.error('[Auth] Resend error:', err)
+        return res.status(500).json({ error: 'Failed to resend verification email' })
+    }
+}
+
+// @desc    Authenticate User
+// @route   POST /api/auth/login
+// @access  Public
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' })
+        }
+        const user = await User.findOne({ email: email.toLowerCase() })
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ error: 'Incorrect email or password. Please try again.' })
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({ error: 'Please verify your email address before logging in. Check your inbox.' })
+        }
+
+        const token = signToken(user)
+        const profile = profileToJSON(user)
+        return res.json({
+            user: {
+                id: profile.id,
+                email: profile.email,
+                user_metadata: {
+                    full_name: profile.full_name,
+                    uid: profile.uid,
+                    department: profile.department,
+                    hostel: profile.hostel
+                }
+            },
+            profile,
+            token
+        })
+    } catch (err) {
+        console.error('[Auth] Login error:', err)
+        return res.status(500).json({ error: err.message || 'Login failed' })
+    }
+}
+
+// @desc    Get current user profile
+// @route   GET /api/auth/me
+// @access  Private
+export const getMe = (req, res) => {
+    const profile = profileToJSON(req.user)
+    return res.json({
+        user: {
+            id: profile.id,
+            email: profile.email,
+            user_metadata: {
+                full_name: profile.full_name,
+                uid: profile.uid,
+                department: profile.department,
+                hostel: profile.hostel
+            }
+        },
+        profile,
+    })
+}
+
+// @desc    Delete Current User Account
+// @route   DELETE /api/auth/me
+// @access  Private
+export const deleteAccount = async (req, res) => {
+    try {
+        await User.deleteOne({ _id: req.user._id })
+        // Optional: Can cascade delete user items here
+        return res.status(200).json({ message: 'Account deleted successfully' })
+    } catch (err) {
+        console.error('[Auth] Account deletion error:', err)
+        return res.status(500).json({ error: 'Failed to delete account' })
+    }
+}
