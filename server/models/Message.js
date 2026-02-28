@@ -7,4 +7,8 @@ const messageSchema = new mongoose.Schema({
     content: { type: String, required: true },
 }, { timestamps: true })
 
+// Create a TTL index to automatically delete messages 24 hours after they are created
+// 86400 seconds = 24 hours
+messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 })
+
 export default mongoose.model('Message', messageSchema)
