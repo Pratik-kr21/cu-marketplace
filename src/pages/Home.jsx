@@ -71,24 +71,8 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Categories */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Browse by Category</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {categories.map(({ label, icon: Icon, color, link }) => (
-                        <Link key={label} to={link.startsWith('/') ? link : `/marketplace${link}`}
-                            className="flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:border-brand-red hover:shadow-card-hover transition-all duration-150 group">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
-                                <Icon className="w-6 h-6" />
-                            </div>
-                            <span className="text-xs font-semibold text-gray-700 text-center">{label}</span>
-                        </Link>
-                    ))}
-                </div>
-            </section>
-
             {/* Recent Listings */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">Recent Listings</h2>
                     <Link to="/marketplace" className="text-sm font-semibold text-brand-red flex items-center gap-1 hover:underline">
@@ -104,6 +88,22 @@ export default function Home() {
                         {recent.map(item => <ItemCard key={item.id} item={item} />)}
                     </div>
                 )}
+            </section>
+
+            {/* Categories */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Browse by Category</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {categories.map(({ label, icon: Icon, color, link }) => (
+                        <Link key={label} to={link.startsWith('/') ? link : `/marketplace${link}`}
+                            className="flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:border-brand-red hover:shadow-card-hover transition-all duration-150 group">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
+                                <Icon className="w-6 h-6" />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 text-center">{label}</span>
+                        </Link>
+                    ))}
+                </div>
             </section>
 
             {/* Features */}
