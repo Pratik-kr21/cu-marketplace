@@ -249,6 +249,102 @@ export const resendVerification = async (req, res) => {
     }
 }
 
+// @desc    Forgot Password Request
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' })
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() })
+        if (!user) {
+            // Return success anyway to avoid user enumeration
+            return res.status(200).json({ message: 'If an account exists, a reset link has been sent.' })
+        }
+
+        const { rawToken, hashedToken } = generateVerificationToken()
+        user.resetPasswordToken = hashedToken
+        user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 Hour
+
+        await user.save()
+
+        let frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
+        if (frontendUrl && !frontendUrl.startsWith('http')) {
+            frontendUrl = `https://${frontendUrl}`
+        }
+        const resetLink = `${frontendUrl}/reset-password?token=${rawToken}`
+
+        await sendEmail({
+            to: user.email,
+            subject: 'Password Reset Request - CU Marketplace 🔐',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                    <h2 style="color: #111827; text-align: center;">Need a new password?</h2>
+                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
+                        We received a request to reset your password. Click the button below to choose a new one.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetLink}" style="background-color: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+                        This password reset link will expire in <strong>1 hour</strong>.
+                    </p>
+                    <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; word-break: break-all;">
+                        If the button doesn't work, copy and paste this link into your browser:<br/>
+                        <a href="${resetLink}" style="color: #0b5cff;">${resetLink}</a>
+                    </p>
+                </div>
+            `
+        })
+
+        return res.status(200).json({ message: 'A reset link has been sent to your email.' })
+    } catch (err) {
+        console.error('[Auth] Forgot password error:', err)
+        return res.status(500).json({ error: 'Failed to process request.' })
+    }
+}
+
+// @desc    Reset Password
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and new password are required.' })
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters.' })
+        }
+
+        const hashedIncomingToken = hashToken(token)
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedIncomingToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        })
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired reset link.' })
+        }
+
+        user.password = password
+        user.resetPasswordToken = null
+        user.resetPasswordExpires = null
+        await user.save()
+
+        return res.status(200).json({ message: 'Password has been reset successfully. You can now login.' })
+    } catch (err) {
+        console.error('[Auth] Reset password error:', err)
+        return res.status(500).json({ error: 'Failed to reset password.' })
+    }
+}
+
 // @desc    Authenticate User
 // @route   POST /api/auth/login
 // @access  Public

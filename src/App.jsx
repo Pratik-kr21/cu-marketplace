@@ -16,6 +16,8 @@ import Chat from './pages/Chat'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import VerifyEmail from './pages/VerifyEmail'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import AdminDashboard from './pages/AdminDashboard'
 
 function AuthSplash() {
@@ -55,6 +57,8 @@ export default function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/verify-email" element={<VerifyEmail />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                         <Route path="/trades" element={<ProtectedRoute><TradeDashboard /></ProtectedRoute>} />

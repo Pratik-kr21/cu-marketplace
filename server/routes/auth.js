@@ -7,7 +7,9 @@ import {
     verifyEmail,
     resendVerification,
     getMe,
-    deleteAccount
+    deleteAccount,
+    forgotPassword,
+    resetPassword
 } from '../controllers/authController.js'
 
 const router = Router()
@@ -43,6 +45,9 @@ router.get('/verify-email', verifyEmail)
 router.post('/verify-email', verifyEmail)
 
 router.post('/resend-verification', resendLimiter, resendVerification)
+
+router.post('/forgot-password', forgotPassword)
+router.post('/reset-password', resetPassword)
 
 // Protected Routes
 router.get('/me', authMiddleware, getMe)

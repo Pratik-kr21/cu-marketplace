@@ -60,9 +60,12 @@ export default function Login() {
                         <Input label="CU Email" type="email" placeholder="23bce10055@cuchd.in" error={errors.email?.message} {...register('email')} />
                         <div>
                             <Input label="Password" type={showPass ? 'text' : 'password'} placeholder="••••••••" error={errors.password?.message} {...register('password')} />
-                            <button type="button" onClick={() => setShowPass(!showPass)} className="text-xs text-gray-400 hover:text-gray-700 mt-1.5 transition-colors flex items-center gap-1">
-                                {showPass ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />} {showPass ? 'Hide' : 'Show'} password
-                            </button>
+                            <div className="flex items-center justify-between mt-1.5">
+                                <button type="button" onClick={() => setShowPass(!showPass)} className="text-xs text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1">
+                                    {showPass ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />} {showPass ? 'Hide' : 'Show'} password
+                                </button>
+                                <Link to="/forgot-password" className="text-xs text-brand-red hover:underline font-medium">Forgot Password?</Link>
+                            </div>
                         </div>
                         <Button type="submit" size="lg" loading={loading} className="w-full">Sign In</Button>
                     </form>
