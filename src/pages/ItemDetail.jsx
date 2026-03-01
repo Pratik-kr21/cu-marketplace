@@ -23,6 +23,7 @@ export default function ItemDetail() {
     const [selectedOffer, setSelectedOffer] = useState(null)
     const [offerType, setOfferType] = useState('item')
     const [cashAmount, setCashAmount] = useState('')
+    const [desiredQuantity, setDesiredQuantity] = useState(1)
     const [loadingMyItems, setLoadingMyItems] = useState(false)
     const [tradeSending, setTradeSending] = useState(false)
     const [tradeSuccess, setTradeSuccess] = useState(false)
@@ -82,6 +83,7 @@ export default function ItemDetail() {
                     seller_id: item.seller_id || item.seller?.id,
                     offer_item_desc: offerDesc,
                     message: tradeMsg.trim(),
+                    desired_quantity: desiredQuantity
                 })
                 const buyerName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
                 sendPushToUser(
@@ -97,6 +99,7 @@ export default function ItemDetail() {
                 setTradeSuccess(false)
                 setSelectedOffer(null)
                 setCashAmount('')
+                setDesiredQuantity(1)
                 setTradeMsg('')
             }, 2000)
         } catch (err) {
@@ -158,9 +161,10 @@ export default function ItemDetail() {
                                 <ArrowRightLeft className="w-5 h-5 text-brand-red" /> Open to Barter
                             </p>
                         ) : (
-                            <p className="text-3xl font-extrabold text-brand-red">
-                                {item.is_free ? 'FREE' : `₹${item.price?.toLocaleString('en-IN')}`}
-                            </p>
+                            <div className="flex items-end gap-2 text-brand-red font-extrabold">
+                                <span className="text-3xl">{item.is_free ? 'FREE' : `₹${item.price?.toLocaleString('en-IN')}`}</span>
+                                {!item.is_free && item.quantity > 1 && <span className="text-sm font-medium text-gray-400 mb-1.5">/ item</span>}
+                            </div>
                         )}
                     </div>
 
@@ -223,7 +227,7 @@ export default function ItemDetail() {
                 </div>
             </div>
 
-            <Modal isOpen={tradeModal} onClose={() => { setTradeModal(false); setTradeSuccess(false); setTradeError(''); setSelectedOffer(null); setCashAmount(''); setTradeMsg('') }} title="Propose a Trade">
+            <Modal isOpen={tradeModal} onClose={() => { setTradeModal(false); setTradeSuccess(false); setTradeError(''); setSelectedOffer(null); setCashAmount(''); setDesiredQuantity(1); setTradeMsg('') }} title="Propose a Trade">
                 {tradeSuccess ? (
                     <div className="py-8 text-center">
                         <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -235,8 +239,25 @@ export default function ItemDetail() {
                 ) : (
                     <div className="space-y-4">
                         <p className="text-sm text-gray-600">
-                            Offer one of your items in exchange for <strong>{item.title}</strong>.
+                            Offer one of your items or cash in exchange for <strong>{item.title}</strong>.
                         </p>
+
+                        {item.quantity > 1 && (
+                            <div>
+                                <label className="text-sm font-medium text-gray-700 block mb-2">Quantity you want</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max={item.quantity}
+                                    value={desiredQuantity}
+                                    onChange={e => setDesiredQuantity(Math.min(item.quantity, Math.max(1, parseInt(e.target.value) || 1)))}
+                                    className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                                />
+                                {!item.is_free && !item.is_barter_only && offerType === 'cash' && (
+                                    <p className="text-xs text-gray-500 mt-1">Total value: ₹{((item.price || 0) * desiredQuantity).toLocaleString('en-IN')}</p>
+                                )}
+                            </div>
+                        )}
 
                         <div className="flex gap-2 mb-2 p-1 bg-gray-100 rounded-lg">
                             <button

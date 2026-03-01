@@ -11,7 +11,9 @@ export default function ItemCard({ item }) {
         ? null
         : item.price === 0 || item.is_free
             ? 'Free'
-            : `₹${item.price?.toLocaleString('en-IN')}`
+            : item.quantity > 1
+                ? `₹${item.price?.toLocaleString('en-IN')} / item`
+                : `₹${item.price?.toLocaleString('en-IN')}`
 
     return (
         <div

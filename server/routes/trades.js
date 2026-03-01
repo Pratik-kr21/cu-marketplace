@@ -42,6 +42,7 @@ router.get('/', authMiddleware, async (req, res) => {
             item_id: t.item_id?._id?.toString(),
             buyer_id: t.buyer_id?._id?.toString(),
             seller_id: t.seller_id?._id?.toString(),
+            desired_quantity: t.desired_quantity || 1,
             type: t.type,
             offer_item_desc: t.offer_item_desc,
             message: t.message,
@@ -62,12 +63,13 @@ router.get('/', authMiddleware, async (req, res) => {
 // Create trade
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { item_id, seller_id, offer_item_desc, message } = req.body
+        const { item_id, seller_id, offer_item_desc, message, desired_quantity } = req.body
         if (!item_id || !seller_id) return res.status(400).json({ error: 'item_id and seller_id required' })
         const trade = await Trade.create({
             item_id,
             buyer_id: req.user._id,
             seller_id,
+            desired_quantity: desired_quantity || 1,
             type: 'barter',
             offer_item_desc: offer_item_desc || 'Open trade offer',
             message: message || '',
@@ -109,7 +111,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
             const item = await Item.findById(trade.item_id)
             if (item) {
                 // Decrement the quantity for this particular trade completion
-                let updatedQty = (item.quantity || 1) - 1
+                let updatedQty = (item.quantity || 1) - (trade.desired_quantity || 1)
 
                 if (updatedQty <= 0) {
                     // Item runs out of stock, erase from DB and Cloudinary

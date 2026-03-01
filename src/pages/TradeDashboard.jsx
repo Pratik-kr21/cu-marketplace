@@ -187,7 +187,7 @@ export default function TradeDashboard() {
                                     <div className="flex-1 text-center">
                                         <p className="text-xs text-gray-500 mb-1">{isIncoming ? 'They want' : 'You want'}</p>
                                         <p className="text-sm font-semibold text-gray-900 leading-tight">
-                                            {trade.item?.title || '—'}
+                                            {trade.item?.title || '—'} {trade.desired_quantity > 1 ? `(Qty: ${trade.desired_quantity})` : ''}
                                         </p>
                                         {trade.item?.images?.[0] && (
                                             <img src={trade.item.images[0]} alt="" className="w-10 h-10 object-cover rounded mx-auto mt-1" />
