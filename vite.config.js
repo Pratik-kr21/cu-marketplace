@@ -97,7 +97,8 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: false, // Disabled in dev — SW can cache failed requests and mask errors
+        enabled: true, // Enabled testing PWA in dev
+        type: 'module',
       },
     }),
   ],

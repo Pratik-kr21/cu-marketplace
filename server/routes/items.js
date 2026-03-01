@@ -2,6 +2,9 @@ import { Router } from 'express'
 import Item from '../models/Item.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { deleteImageFromCloudinary } from '../utils/cloudinary.js'
+import Trade from '../models/Trade.js'
+import Conversation from '../models/Conversation.js'
+import Message from '../models/Message.js'
 
 const router = Router()
 
@@ -88,6 +91,21 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 await deleteImageFromCloudinary(imgUrl)
             }
         }
+
+        // Notify all conversations and set up chat deletion message
+        const conversations = await Conversation.find({ item_id: req.params.id })
+        for (const convo of conversations) {
+            const systemMsg = new Message({
+                conversation_id: convo._id,
+                sender_id: req.user._id,
+                receiver_id: convo.buyer_id.toString() === req.user._id.toString() ? convo.seller_id : convo.buyer_id,
+                content: '⚠️ This item has been deleted. All active trades have been cancelled. Note: This chat will be automatically deleted in 24 hours.',
+            })
+            await systemMsg.save()
+        }
+
+        // Delete all related trades
+        await Trade.deleteMany({ item_id: req.params.id })
 
         // Delete Mongo Document
         await Item.deleteOne({ _id: req.params.id })

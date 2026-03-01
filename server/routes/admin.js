@@ -2,6 +2,8 @@ import { Router } from 'express'
 import User from '../models/User.js'
 import Item from '../models/Item.js'
 import Trade from '../models/Trade.js'
+import Conversation from '../models/Conversation.js'
+import Message from '../models/Message.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
@@ -81,6 +83,24 @@ router.get('/items', authMiddleware, adminMiddleware, async (req, res) => {
 // Delete an item
 router.delete('/items/:id', authMiddleware, adminMiddleware, async (req, res) => {
     try {
+        const item = await Item.findById(req.params.id)
+        if (!item) return res.status(404).json({ error: 'Item not found' })
+
+        // Notify all conversations
+        const conversations = await Conversation.find({ item_id: req.params.id })
+        for (const convo of conversations) {
+            const systemMsg = new Message({
+                conversation_id: convo._id,
+                sender_id: req.user._id, // Admin
+                receiver_id: convo.buyer_id.toString() === item.seller_id?.toString() ? convo.seller_id : convo.buyer_id,
+                content: '⚠️ This item has been removed by the Admin. All active trades have been cancelled. Note: This chat will be automatically deleted in 24 hours.',
+            })
+            await systemMsg.save()
+        }
+
+        // Delete related trades
+        await Trade.deleteMany({ item_id: req.params.id })
+
         await Item.findByIdAndDelete(req.params.id)
         res.json({ success: true, message: 'Item deleted' })
     } catch (error) {

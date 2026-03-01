@@ -12,16 +12,28 @@ export default function InstallPWA() {
             return
         }
 
-        const handler = (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault()
-            // Stash the event so it can be triggered later.
-            setDeferredPrompt(e)
-            // Show custom install prompt
-            setShowInstall(true)
+        const handleReady = () => {
+            if (window.deferredPWAInstallPrompt) {
+                setDeferredPrompt(window.deferredPWAInstallPrompt)
+                setShowInstall(true)
+            }
         }
 
+        const handler = (e) => {
+            e.preventDefault()
+            window.deferredPWAInstallPrompt = e
+            handleReady()
+        }
+
+        // Check if it already fired before mount
+        if (window.deferredPWAInstallPrompt) {
+            handleReady()
+        }
+
+        // Listen for standard browser event
         window.addEventListener('beforeinstallprompt', handler)
+        // Listen for our custom event from main.jsx
+        window.addEventListener('pwa-prompt-ready', handleReady)
 
         // Clear showInstall if app is installed
         window.addEventListener('appinstalled', () => {
@@ -29,7 +41,10 @@ export default function InstallPWA() {
             setDeferredPrompt(null)
         })
 
-        return () => window.removeEventListener('beforeinstallprompt', handler)
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handler)
+            window.removeEventListener('pwa-prompt-ready', handleReady)
+        }
     }, [])
 
     const handleInstallClick = async () => {
@@ -44,7 +59,14 @@ export default function InstallPWA() {
 
         // We've used the prompt, and can't use it again, throw it away
         setDeferredPrompt(null)
+        window.deferredPWAInstallPrompt = null
         setShowInstall(false)
+    }
+
+    const handleDismiss = () => {
+        setShowInstall(false)
+        // Optionally clear the global if user says not now
+        // window.deferredPWAInstallPrompt = null
     }
 
     if (!showInstall) return null
@@ -59,10 +81,10 @@ export default function InstallPWA() {
                 <p className="text-gray-500 text-xs leading-relaxed mb-3">Install our application on your home screen for quick and easy access when you're on the go.</p>
                 <div className="flex gap-2">
                     <Button size="sm" className="flex-1 py-1.5 text-xs" onClick={handleInstallClick}>Install App</Button>
-                    <Button size="sm" variant="secondary" className="flex-1 py-1.5 text-xs" onClick={() => setShowInstall(false)}>Not Now</Button>
+                    <Button size="sm" variant="secondary" className="flex-1 py-1.5 text-xs" onClick={handleDismiss}>Not Now</Button>
                 </div>
             </div>
-            <button onClick={() => setShowInstall(false)} className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 text-gray-400 hover:text-gray-900 shadow-sm transition-colors">
+            <button onClick={handleDismiss} className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 text-gray-400 hover:text-gray-900 shadow-sm transition-colors">
                 <X className="w-3 h-3" />
             </button>
         </div>
