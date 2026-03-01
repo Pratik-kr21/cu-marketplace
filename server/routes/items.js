@@ -22,6 +22,7 @@ function itemToResponse(item) {
         images: imageUrlRef,
         imageUrls: undefined,
         userId: undefined,
+        quantity: obj.quantity,
         seller: sellerObj ? {
             id: sellerIdStr,
             full_name: sellerObj.full_name,
@@ -106,7 +107,7 @@ router.get('/my', authMiddleware, async (req, res) => {
             is_available: true
         })
             .sort({ createdAt: -1 })
-            .select('title imageUrls images price is_barter_only is_free userId seller_id')
+            .select('title imageUrls images price is_barter_only is_free userId seller_id quantity')
             .lean()
 
         return res.json(items.map(itemToResponse))

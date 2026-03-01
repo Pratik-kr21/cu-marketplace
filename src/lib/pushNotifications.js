@@ -1,6 +1,6 @@
 import { api, isBackendConfigured } from './api'
 
-export const VAPID_PUBLIC_KEY = 'BNwQmGch0JKc_QuApVC7rpZMZwpZOewoKVWCh4UqHCo0nMiBsDWbwEf3sTOK8Jcn0mAIedbEHk4AtnOb0Bj0Ack'
+export const VAPID_PUBLIC_KEY = 'BFc9iO20-dXkAW8HkvFnk8vle1A5W4XVSn5YSRQYGT6_Vw3liXdPgp2WVa3-ryaA7nEuWLxDe05cioc-36l1HkM'
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -70,10 +70,11 @@ export async function isPushSubscribed() {
     }
 }
 
-/**
- * Notify another user via push. Backend would need web-push to send; for now no-op unless you add an endpoint.
- */
 export async function sendPushToUser(userId, title, message, url = '/') {
-    // Optional: call backend POST /api/push/send with { user_id: userId, title, message, url }
-    // Backend would look up subscription and use web-push. Not implemented here.
+    if (!isBackendConfigured) return
+    try {
+        await api.post('/api/push/send', { user_id: userId, title, message, url })
+    } catch (err) {
+        console.error('Failed to send push notification', err)
+    }
 }

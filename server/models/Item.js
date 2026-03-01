@@ -12,6 +12,7 @@ const itemSchema = new mongoose.Schema({
     condition: { type: String, required: true },
     imageUrls: [{ type: String }],
     hostel_area: { type: String, default: '' },
+    quantity: { type: Number, default: 1 },
     is_available: { type: Boolean, default: true },
 }, { timestamps: true })
 

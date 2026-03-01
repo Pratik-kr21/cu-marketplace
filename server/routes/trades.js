@@ -89,7 +89,7 @@ router.post('/', authMiddleware, async (req, res) => {
 router.patch('/:id', authMiddleware, async (req, res) => {
     try {
         const { status } = req.body
-        if (!['accepted', 'declined', 'cancelled'].includes(status)) {
+        if (!['accepted', 'declined', 'cancelled', 'completed'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status' })
         }
         const trade = await Trade.findOne({ _id: req.params.id })
@@ -97,33 +97,41 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         const isSeller = trade.seller_id.toString() === req.user._id.toString()
         const isBuyer = trade.buyer_id.toString() === req.user._id.toString()
         if (status === 'cancelled' && !isBuyer) return res.status(403).json({ error: 'Only buyer can cancel' })
+        if (status === 'completed' && !isBuyer) return res.status(403).json({ error: 'Only buyer can mark as completed' })
         if (['accepted', 'declined'].includes(status) && !isSeller) return res.status(403).json({ error: 'Only seller can accept/decline' })
         trade.status = status
         trade.updatedAt = new Date()
         await trade.save()
 
         // 🚨 POST-TRADE DB CLEANUP
-        // If the seller just accepted this trade, the item is sold/traded.
-        // It must be erased from the database and Cloudinary to save space.
-        if (status === 'accepted') {
+        // Only trigger item deletion/decrement when a buyer confirms they got the product ('completed')
+        if (status === 'completed') {
             const item = await Item.findById(trade.item_id)
             if (item) {
-                // Delete orphaned images from Cloudinary
-                const imgs = item.imageUrls?.length > 0 ? item.imageUrls : item.images
-                if (imgs && imgs.length > 0) {
-                    for (const imgUrl of imgs) {
-                        try { await deleteImageFromCloudinary(imgUrl) } catch (e) { console.error('Cloudinary cleanup error during trade accept:', e) }
+                // Decrement the quantity for this particular trade completion
+                let updatedQty = (item.quantity || 1) - 1
+
+                if (updatedQty <= 0) {
+                    // Item runs out of stock, erase from DB and Cloudinary
+                    const imgs = item.imageUrls?.length > 0 ? item.imageUrls : item.images
+                    if (imgs && imgs.length > 0) {
+                        for (const imgUrl of imgs) {
+                            try { await deleteImageFromCloudinary(imgUrl) } catch (e) { console.error('Cloudinary cleanup error during trade completion:', e) }
+                        }
                     }
+
+                    await Item.deleteOne({ _id: trade.item_id })
+
+                    // Decline all other pending trades targeting this now-deleted item
+                    await Trade.updateMany(
+                        { item_id: trade.item_id, _id: { $ne: trade._id }, status: 'pending' },
+                        { $set: { status: 'declined', updatedAt: new Date() } }
+                    )
+                } else {
+                    // Update new quantity
+                    item.quantity = updatedQty
+                    await item.save()
                 }
-
-                // Erase Item document
-                await Item.deleteOne({ _id: trade.item_id })
-
-                // Automatically decline all other pending trades targeting this now-deleted item
-                await Trade.updateMany(
-                    { item_id: trade.item_id, _id: { $ne: trade._id }, status: 'pending' },
-                    { $set: { status: 'declined', updatedAt: new Date() } }
-                )
             }
         }
 

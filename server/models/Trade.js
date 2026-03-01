@@ -7,7 +7,7 @@ const tradeSchema = new mongoose.Schema({
     type: { type: String, default: 'barter' },
     offer_item_desc: { type: String, default: '' },
     message: { type: String, default: '' },
-    status: { type: String, enum: ['pending', 'accepted', 'declined', 'cancelled'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'accepted', 'declined', 'cancelled', 'completed'], default: 'pending' },
 }, { timestamps: true })
 
 export default mongoose.model('Trade', tradeSchema)

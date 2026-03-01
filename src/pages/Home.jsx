@@ -31,14 +31,14 @@ export default function Home() {
     return (
         <div className="min-h-screen">
             {/* Hero */}
-            <section className="bg-gradient-to-br from-gray-900 via-gray-900 to-brand-dark text-white relative overflow-hidden">
-                <div className="absolute inset-0 opacity-5">
-                    <div className="absolute top-10 left-10 w-72 h-72 bg-brand-red rounded-full blur-3xl" />
-                    <div className="absolute bottom-0 right-20 w-96 h-96 bg-brand-red rounded-full blur-3xl" />
+            <section className="bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white relative overflow-hidden">
+                <div className="absolute inset-0">
+                    <div className="absolute top-0 -left-20 w-[400px] h-[400px] bg-gradient-to-r from-slate-600/20 to-gray-600/10 rounded-full blur-3xl" />
+                    <div className="absolute -bottom-20 -right-20 w-[600px] h-[600px] bg-red-500/10 rounded-full blur-3xl" />
                 </div>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 relative z-10">
                     <div className="max-w-2xl animate-slide-up">
-                        <span className="inline-flex items-center gap-2 bg-brand-red/20 border border-brand-red/30 text-brand-red text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                        <span className="inline-flex items-center gap-2 bg-brand-red/10 border border-brand-red/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
                             🎓 Exclusively for Chandigarh University
                         </span>
                         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">

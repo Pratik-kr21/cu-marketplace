@@ -21,6 +21,7 @@ const schema = z.object({
     condition: z.string().min(1, 'Pick a condition'),
     listing_type: z.enum(['sell', 'barter', 'both']),
     price: z.string().optional(),
+    quantity: z.string().optional(),
     hostel_area: z.string().optional(),
 })
 
@@ -162,6 +163,7 @@ export default function CreateListing() {
                 is_barter_only: data.listing_type === 'barter',
                 accept_hybrid: data.listing_type === 'both',
                 is_free: Number(data.price) === 0 && data.listing_type !== 'barter',
+                quantity: Number(data.quantity) || 1,
                 hostel_area: data.hostel_area || profile?.hostel || '',
                 images: imageUrls,
             }
@@ -327,7 +329,13 @@ export default function CreateListing() {
                             </div>
                         </div>
                         {listingType !== 'barter' && (
-                            <Input label="Price (₹) *" type="number" placeholder="0 for free" prefix="₹" error={errors.price?.message} {...register('price')} />
+                            <div className="grid grid-cols-2 gap-3">
+                                <Input label="Price (₹) *" type="number" placeholder="0 for free" prefix="₹" error={errors.price?.message} {...register('price')} />
+                                <Input label="Quantity" type="number" defaultValue="1" min="1" placeholder="e.g. 1" error={errors.quantity?.message} {...register('quantity')} />
+                            </div>
+                        )}
+                        {listingType === 'barter' && (
+                            <Input label="Quantity" type="number" defaultValue="1" min="1" placeholder="e.g. 1" error={errors.quantity?.message} {...register('quantity')} />
                         )}
                         <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                             <p className="text-xs text-gray-500 leading-relaxed">

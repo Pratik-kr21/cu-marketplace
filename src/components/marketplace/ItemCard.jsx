@@ -57,6 +57,11 @@ export default function ItemCard({ item }) {
                 <div className="flex items-center justify-between mt-auto pt-1">
                     <div className="flex items-center gap-2">
                         <ConditionBadge condition={item.condition} />
+                        {item.quantity > 1 && (
+                            <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                                Qty: {item.quantity}
+                            </span>
+                        )}
                         {item.hostel_area && (
                             <span className="flex items-center gap-0.5 text-xs text-gray-400">
                                 <MapPin className="w-3 h-3" />{item.hostel_area}

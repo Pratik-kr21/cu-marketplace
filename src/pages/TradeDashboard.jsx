@@ -11,6 +11,7 @@ const StatusBadge = ({ status }) => {
         accepted: ['bg-green-50 text-green-700 border-green-200', 'Accepted'],
         declined: ['bg-red-50 text-red-700 border-red-200', 'Declined'],
         cancelled: ['bg-gray-100 text-gray-500 border-gray-200', 'Cancelled'],
+        completed: ['bg-blue-50 text-blue-700 border-blue-200', 'Completed'],
     }
     const [cls, label] = map[status] || map.pending
     return (
@@ -240,25 +241,42 @@ export default function TradeDashboard() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="w-full"
-                                            onClick={async () => {
-                                                try {
-                                                    const convo = await api.post('/api/conversations/upsert', {
-                                                        item_id: trade.item?.id || trade.item_id, // Might be deleted, but track by ID
-                                                        seller_id: isIncoming ? trade.buyer_id : trade.seller_id,
-                                                    });
-                                                    window.location.href = `/chat`;
-                                                } catch (err) {
-                                                    console.error('Failed to open chat:', err);
-                                                    window.location.href = `/chat`;
-                                                }
-                                            }}
-                                        >
-                                            Message {otherPerson}
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="flex-1"
+                                                onClick={async () => {
+                                                    try {
+                                                        const convo = await api.post('/api/conversations/upsert', {
+                                                            item_id: trade.item?.id || trade.item_id,
+                                                            seller_id: isIncoming ? trade.buyer_id : trade.seller_id,
+                                                        });
+                                                        window.location.href = `/chat`;
+                                                    } catch (err) {
+                                                        console.error('Failed to open chat:', err);
+                                                        window.location.href = `/chat`;
+                                                    }
+                                                }}
+                                            >
+                                                Message {otherPerson}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="flex-1 bg-green-600 hover:bg-green-700 border border-transparent text-white"
+                                                loading={actionLoading === trade.id + 'completed'}
+                                                onClick={() => handleAction(trade.id, 'completed')}
+                                            >
+                                                Got the Product!
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {trade.status === 'completed' && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 font-medium flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                                        Trade completed successfully! You got the product.
                                     </div>
                                 )}
                             </div>
