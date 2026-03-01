@@ -41,10 +41,9 @@ export default function ItemDetail() {
         }).finally(() => setLoadingMyItems(false))
     }, [tradeModal, user])
 
-    // Auto-calculate cash amount based on item.price and desiredQuantity
     useEffect(() => {
         if (tradeModal && offerType === 'cash' && item && !item.is_free && !item.is_barter_only) {
-            setCashAmount((item.price || 0) * desiredQuantity)
+            setCashAmount((item.price || 0) * (desiredQuantity || 1))
         }
     }, [tradeModal, offerType, desiredQuantity, item])
 
@@ -90,7 +89,7 @@ export default function ItemDetail() {
                     seller_id: item.seller_id || item.seller?.id,
                     offer_item_desc: offerDesc,
                     message: tradeMsg.trim(),
-                    desired_quantity: desiredQuantity
+                    desired_quantity: desiredQuantity || 1
                 })
                 const buyerName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
                 sendPushToUser(
@@ -257,11 +256,24 @@ export default function ItemDetail() {
                                     min="1"
                                     max={item.quantity}
                                     value={desiredQuantity}
-                                    onChange={e => setDesiredQuantity(Math.min(item.quantity, Math.max(1, parseInt(e.target.value) || 1)))}
+                                    onChange={e => {
+                                        const val = e.target.value
+                                        if (val === '') {
+                                            setDesiredQuantity('')
+                                        } else {
+                                            const num = parseInt(val, 10)
+                                            if (!isNaN(num)) {
+                                                setDesiredQuantity(Math.min(item.quantity, Math.max(1, num)))
+                                            }
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (desiredQuantity === '') setDesiredQuantity(1)
+                                    }}
                                     className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
                                 />
                                 {!item.is_free && !item.is_barter_only && offerType === 'cash' && (
-                                    <p className="text-xs text-gray-500 mt-1">Total value: ₹{((item.price || 0) * desiredQuantity).toLocaleString('en-IN')}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Total value: ₹{((item.price || 0) * (desiredQuantity || 1)).toLocaleString('en-IN')}</p>
                                 )}
                             </div>
                         )}
