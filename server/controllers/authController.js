@@ -35,9 +35,14 @@ export const register = async (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' })
         }
 
-        const existing = await User.findOne({ email: email.toLowerCase() })
+        let existing = await User.findOne({ email: email.toLowerCase() })
         if (existing) {
-            return res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' })
+            if (!existing.isVerified && existing.emailVerificationExpires && existing.emailVerificationExpires < Date.now()) {
+                await User.deleteOne({ _id: existing._id })
+                existing = null
+            } else {
+                return res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' })
+            }
         }
 
         const { rawToken, hashedToken } = generateVerificationToken()
@@ -357,13 +362,19 @@ export const login = async (req, res) => {
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' })
         }
-        const user = await User.findOne({ email: email.toLowerCase() })
+        let user = await User.findOne({ email: email.toLowerCase() })
+
+        if (user && !user.isVerified && user.emailVerificationExpires && user.emailVerificationExpires < Date.now()) {
+            await User.deleteOne({ _id: user._id })
+            user = null
+        }
+
         if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({ error: 'Incorrect email or password. Please try again.' })
         }
 
         if (!user.isVerified) {
-            return res.status(403).json({ error: 'Please verify your email address before logging in. Check your inbox.' })
+            return res.status(403).json({ error: 'Please verify your email address first from the link sent to your inbox.' })
         }
 
         const token = signToken(user)

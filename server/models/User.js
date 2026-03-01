@@ -17,6 +17,14 @@ const userSchema = new mongoose.Schema({
     lastVerificationRequest: { type: Date, default: null },
 }, { timestamps: true })
 
+userSchema.index(
+    { emailVerificationExpires: 1 },
+    {
+        expireAfterSeconds: 0,
+        partialFilterExpression: { isVerified: false }
+    }
+)
+
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next()
     this.password = await bcrypt.hash(this.password, 10)
