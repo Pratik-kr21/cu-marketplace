@@ -72,9 +72,15 @@ export default function ItemDetail() {
     }
 
     const handleSendTrade = async () => {
-        if (!tradeMsg.trim() && offerType === 'item' && !selectedOffer) {
-            setTradeError('Please select an item to offer or write a message.')
-            return
+        if (offerType === 'item') {
+            if (!item.is_free && !selectedOffer) {
+                setTradeError('Please select an item to offer in exchange.')
+                return
+            }
+            if (item.is_free && !selectedOffer && !tradeMsg.trim()) {
+                setTradeError('Please select an item to offer or write a message.')
+                return
+            }
         }
         if (offerType === 'cash' && !cashAmount) {
             setTradeError('Please enter a cash offer amount.')
