@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package } from 'lucide-react'
+import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import Avatar from '../ui/Avatar'
 import NotificationBell from '../ui/NotificationBell'
@@ -70,6 +70,11 @@ export default function Navbar() {
                                 <MessageCircle className="w-5 h-5" />
                             </Link>
                             <NotificationBell />
+                            {user.email === '24bcs10403@cuchd.in' && (
+                                <Link to="/admin" className="p-2 text-brand-red hover:bg-red-50 rounded-md transition-colors relative" title="Admin Dashboard">
+                                    <ShieldAlert className="w-5 h-5" />
+                                </Link>
+                            )}
                             {/* User menu */}
                             <div className="relative">
                                 <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">

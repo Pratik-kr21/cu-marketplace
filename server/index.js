@@ -10,6 +10,7 @@ import tradesRoutes from './routes/trades.js'
 import conversationsRoutes from './routes/conversations.js'
 import uploadRoutes from './routes/upload.js'
 import pushRoutes from './routes/push.js'
+import adminRoutes from './routes/admin.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 await connectDB()
@@ -26,6 +27,7 @@ app.use('/api/trades', tradesRoutes)
 app.use('/api/conversations', conversationsRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/push', pushRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
