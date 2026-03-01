@@ -12,6 +12,12 @@ export default function InstallPWA() {
             return
         }
 
+        // Only show custom popup on mobile browsers
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')
+        if (!isMobile) {
+            return
+        }
+
         const handleReady = () => {
             if (window.deferredPWAInstallPrompt) {
                 setDeferredPrompt(window.deferredPWAInstallPrompt)
