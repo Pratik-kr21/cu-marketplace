@@ -22,14 +22,7 @@ export default function NotificationPrompt() {
 
             // Only show if we haven't asked yet
             if (Notification.permission === 'default') {
-                // Optionally, restrict to PWA standalone mode only:
-                // if (window.matchMedia('(display-mode: standalone)').matches) {
-                //     setShow(true)
-                // }
-                // User asked: "allow permision in pwa" — we'll enforce it's ONLY asked inside the PWA.
-                if (window.matchMedia('(display-mode: standalone)').matches) {
-                    setShow(true)
-                }
+                setShow(true)
             }
         }, 3000)
 
