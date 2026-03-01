@@ -67,6 +67,7 @@ export const register = async (req, res) => {
         await sendEmail({
             to: user.email,
             subject: 'Verify your CU Marketplace Account 🎓',
+            text: `Welcome to CU Marketplace!\n\nYou're almost there! We just need to verify your @cuchd.in email address to activate your account.\n\nPlease copy and paste this link into your browser to verify your email:\n${verificationLink}\n\nThis verification link will expire in 1 hour.\n\nThank you,\nCU Marketplace Team`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
                     <h2 style="color: #111827; text-align: center;">Welcome to CU Marketplace!</h2>
@@ -220,6 +221,7 @@ export const resendVerification = async (req, res) => {
         await sendEmail({
             to: user.email,
             subject: 'Verify your CU Marketplace Account 🎓',
+            text: `Welcome to CU Marketplace!\n\nYou're almost there! We just need to verify your @cuchd.in email address to activate your account.\n\nPlease copy and paste this link into your browser to verify your email:\n${verificationLink}\n\nThis verification link will expire in 1 hour.\n\nThank you,\nCU Marketplace Team`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
                     <h2 style="color: #111827; text-align: center;">Welcome to CU Marketplace!</h2>
@@ -280,6 +282,7 @@ export const forgotPassword = async (req, res) => {
         await sendEmail({
             to: user.email,
             subject: 'Password Reset Request - CU Marketplace 🔐',
+            text: `Need a new password?\n\nWe received a request to reset your password. Please copy and paste the following link into your browser to choose a new password:\n${resetLink}\n\nThis password reset link will expire in 1 hour.\n\nThank you,\nCU Marketplace Team`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
                     <h2 style="color: #111827; text-align: center;">Need a new password?</h2>

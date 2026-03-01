@@ -18,9 +18,9 @@ const transporter = nodemailer.createTransport({
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email address
  * @param {string} options.subject - Email subject line
- * @param {string} options.html - HTML string for email body
+ * @param {string} [options.text] - Plain text fallback for the email
  */
-export const sendEmail = async ({ to, subject, html }) => {
+export const sendEmail = async ({ to, subject, html, text }) => {
     // Development mockup if env vars are intentionally left blank locally
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.log('\n=============================================')
@@ -35,9 +35,11 @@ export const sendEmail = async ({ to, subject, html }) => {
     try {
         const info = await transporter.sendMail({
             from: `"CU Marketplace" <${process.env.EMAIL_USER}>`,
+            replyTo: process.env.EMAIL_USER,
             to,
             subject,
             html,
+            text: text || html.replace(/<[^>]+>/g, '\n').replace(/\n+/g, '\n').trim(), // Auto-generate text fallback if not provided
         })
         console.log(`✅ [Email] Successfully sent to ${to}. Message ID: ${info.messageId}`)
 
