@@ -41,6 +41,13 @@ export default function ItemDetail() {
         }).finally(() => setLoadingMyItems(false))
     }, [tradeModal, user])
 
+    // Auto-calculate cash amount based on item.price and desiredQuantity
+    useEffect(() => {
+        if (tradeModal && offerType === 'cash' && item && !item.is_free && !item.is_barter_only) {
+            setCashAmount((item.price || 0) * desiredQuantity)
+        }
+    }, [tradeModal, offerType, desiredQuantity, item])
+
     const handleMessageSeller = async () => {
         if (!user) { navigate('/login'); return }
         if (!isBackendConfigured) return
