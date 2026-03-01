@@ -19,7 +19,7 @@ export default function Signup() {
 
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(signupSchema),
-        defaultValues: { uid: '', email: '', full_name: '', department: '', hostel: '', password: '' },
+        defaultValues: { uid: '', email: '', full_name: '', department: '', hostel: '', password: '', confirmPassword: '' },
     })
 
     const uid = watch('uid')
@@ -157,11 +157,19 @@ export default function Signup() {
                         </div>
 
                         <Input
-                            label="Password *"
+                            label="Set Password *"
                             type="password"
                             placeholder="At least 8 characters"
                             error={errors.password?.message}
                             {...register('password')}
+                        />
+
+                        <Input
+                            label="Confirm Password *"
+                            type="password"
+                            placeholder="Must match password"
+                            error={errors.confirmPassword?.message}
+                            {...register('confirmPassword')}
                         />
 
                         <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3">

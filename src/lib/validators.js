@@ -14,6 +14,7 @@ export const signupSchema = z.object({
         .email('Invalid email')
         .endsWith('@cuchd.in', { message: 'Must be a @cuchd.in email' }),
     password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(8, 'Please confirm your password'),
     department: z.string().min(1, 'Select your department'),
     hostel: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -24,6 +25,14 @@ export const signupSchema = z.object({
             code: z.ZodIssueCode.custom,
             message: `Email must match your UID — expected ${data.uid.toLowerCase()}@cuchd.in`,
             path: ['email'],
+        })
+    }
+
+    if (data.password !== data.confirmPassword) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Passwords don't match",
+            path: ['confirmPassword'],
         })
     }
 })
