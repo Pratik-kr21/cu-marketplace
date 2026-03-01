@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import InstallPWA from './components/ui/InstallPWA'
+import NotificationPrompt from './components/ui/NotificationPrompt'
 
 import Home from './pages/Home'
 import Marketplace from './pages/Marketplace'
@@ -50,6 +51,7 @@ export default function App() {
         <BrowserRouter>
             <div className="min-h-screen flex flex-col">
                 <InstallPWA />
+                <NotificationPrompt />
                 <Navbar />
                 <main className="flex-1">
                     <Routes>

@@ -4,6 +4,7 @@ import Item from '../models/Item.js'
 import User from '../models/User.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { deleteImageFromCloudinary } from '../utils/cloudinary.js'
+import { sendPushNotification } from './push.js'
 
 const router = Router()
 
@@ -98,6 +99,10 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         if (!trade) return res.status(404).json({ error: 'Trade not found' })
         const isSeller = trade.seller_id.toString() === req.user._id.toString()
         const isBuyer = trade.buyer_id.toString() === req.user._id.toString()
+
+        // Populate basic Item details to give a better notification title
+        const item = await Item.findById(trade.item_id)
+        const itemTitle = item ? item.title : 'an item'
         if (status === 'cancelled' && !isBuyer) return res.status(403).json({ error: 'Only buyer can cancel' })
         if (status === 'completed' && !isBuyer) return res.status(403).json({ error: 'Only buyer can mark as completed' })
         if (['accepted', 'declined'].includes(status) && !isSeller) return res.status(403).json({ error: 'Only seller can accept/decline' })
@@ -135,6 +140,21 @@ router.patch('/:id', authMiddleware, async (req, res) => {
                     await item.save()
                 }
             }
+        }
+
+        // Send Push Notifications based on action
+        try {
+            if (status === 'accepted') {
+                await sendPushNotification(trade.buyer_id, 'Trade Accepted! 🎉', `The seller accepted your offer for ${itemTitle}. Check your dashboard to proceed.`, '/trades')
+            } else if (status === 'declined') {
+                await sendPushNotification(trade.buyer_id, 'Trade Declined', `The seller respectfully declined your offer for ${itemTitle}.`, '/trades')
+            } else if (status === 'cancelled') {
+                await sendPushNotification(trade.seller_id, 'Trade Cancelled', `The buyer withdrew their offer for ${itemTitle}.`, '/trades')
+            } else if (status === 'completed') {
+                await sendPushNotification(trade.seller_id, 'Trade Completed! ✅', `The buyer has successfully received ${itemTitle}. The trade is now complete!`, '/trades')
+            }
+        } catch (e) {
+            console.error('Failed to send trade status push:', e)
         }
 
         return res.json(tradeToResponse(trade))

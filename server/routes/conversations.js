@@ -4,6 +4,7 @@ import Message from '../models/Message.js'
 import Item from '../models/Item.js'
 import User from '../models/User.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { sendPushNotification } from './push.js'
 
 const router = Router()
 
@@ -116,6 +117,26 @@ router.post('/:id/messages', authMiddleware, async (req, res) => {
             content: content.trim(),
         })
         await Conversation.findByIdAndUpdate(convo._id, { updatedAt: new Date() })
+
+        // Send Push Notification
+        try {
+            // Find sender name for notification
+            const sender = await User.findById(req.user._id).select('full_name').lean()
+            const senderName = sender?.full_name || 'Someone'
+
+            // Generate notification content based on message length
+            const shortContent = content.trim().length > 40 ? content.trim().substring(0, 40) + '...' : content.trim()
+
+            await sendPushNotification(
+                receiver_id,
+                `New Message from ${senderName}`,
+                `"${shortContent}"`,
+                `/chat`
+            )
+        } catch (e) {
+            console.error('Failed to send chat push notification:', e)
+        }
+
         return res.status(201).json({
             id: msg._id.toString(),
             content: msg.content,

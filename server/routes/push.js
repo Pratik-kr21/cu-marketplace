@@ -9,6 +9,36 @@ webpush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY || 'NBPZLrAYntkz0YiQq0gMMLUjCbsX8rRlqFkU639K22I'
 )
 
+export async function sendPushNotification(user_id, title, message, url = '/') {
+    try {
+        const subs = await PushSubscription.find({ user_id })
+        if (!subs || subs.length === 0) return 0
+
+        const payload = JSON.stringify({
+            title: title || 'CU Marketplace',
+            message: message || '',
+            url: url || '/'
+        })
+
+        await Promise.all(subs.map(async sub => {
+            try {
+                await webpush.sendNotification({
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth }
+                }, payload)
+            } catch (err) {
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                    await PushSubscription.deleteOne({ _id: sub._id })
+                }
+            }
+        }))
+        return subs.length
+    } catch (err) {
+        console.error('Push send helper error:', err)
+        return 0
+    }
+}
+
 const router = Router()
 
 // Upsert push subscription
@@ -46,31 +76,8 @@ router.post('/send', authMiddleware, async (req, res) => {
     try {
         const { user_id, title, message, url } = req.body
         if (!user_id || (!title && !message)) return res.status(400).json({ error: 'user_id and title/message required' })
-
-        const subs = await PushSubscription.find({ user_id })
-
-        const payload = JSON.stringify({
-            title: title || 'CU Marketplace',
-            message: message || '',
-            url: url || '/'
-        })
-
-        await Promise.all(subs.map(async sub => {
-            try {
-                await webpush.sendNotification({
-                    endpoint: sub.endpoint,
-                    keys: { p256dh: sub.p256dh, auth: sub.auth }
-                }, payload)
-            } catch (err) {
-                if (err.statusCode === 410 || err.statusCode === 404) {
-                    await PushSubscription.deleteOne({ _id: sub._id })
-                } else {
-                    console.error('Push send failed for a sub:', err)
-                }
-            }
-        }))
-
-        return res.json({ success: true, count: subs.length })
+        const count = await sendPushNotification(user_id, title, message, url)
+        return res.json({ success: true, count })
     } catch (err) {
         console.error('[Push] Send error:', err)
         return res.status(500).json({ error: err.message })
