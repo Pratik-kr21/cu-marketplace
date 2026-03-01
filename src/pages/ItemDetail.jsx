@@ -14,7 +14,7 @@ import { sendPushToUser } from '../lib/pushNotifications'
 export default function ItemDetail() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const { items } = useItemStore()
+    const { items, fetchItems, loading } = useItemStore()
     const { user } = useAuthStore()
     const [activeImg, setActiveImg] = useState(0)
     const [tradeModal, setTradeModal] = useState(false)
@@ -32,6 +32,12 @@ export default function ItemDetail() {
 
     const item = items.find(i => i.id === id)
     const isSeller = user?.id === item?.seller_id || user?.id === item?.seller?.id
+
+    useEffect(() => {
+        if (items.length === 0 && !loading) {
+            fetchItems()
+        }
+    }, [items.length, fetchItems, loading])
 
     useEffect(() => {
         if (!tradeModal || !user || !isBackendConfigured) return
@@ -114,6 +120,13 @@ export default function ItemDetail() {
             setTradeSending(false)
         }
     }
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <Loader2 className="w-10 h-10 text-brand-red animate-spin" />
+            <p className="text-gray-500 font-medium">Loading item details...</p>
+        </div>
+    )
 
     if (!item) return (
         <div className="max-w-2xl mx-auto py-20 text-center">
