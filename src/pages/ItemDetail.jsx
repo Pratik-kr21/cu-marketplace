@@ -29,6 +29,7 @@ export default function ItemDetail() {
     const [tradeSuccess, setTradeSuccess] = useState(false)
     const [tradeError, setTradeError] = useState('')
     const [msgSending, setMsgSending] = useState(false)
+    const [shareCopied, setShareCopied] = useState(false)
 
     const item = items.find(i => i.id === id)
     const isSeller = user?.id === item?.seller_id || user?.id === item?.seller?.id
@@ -239,9 +240,30 @@ export default function ItemDetail() {
                     )}
 
                     <button
-                        onClick={() => { navigator.clipboard.writeText(window.location.href) }}
-                        className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 transition-colors">
-                        <Share2 className="w-4 h-4" /> Share listing
+                        onClick={async () => {
+                            if (navigator.share) {
+                                try {
+                                    await navigator.share({
+                                        title: item.title,
+                                        text: `Check out ${item.title} on CU Market!`,
+                                        url: window.location.href,
+                                    })
+                                } catch (err) {
+                                    if (err.name !== 'AbortError') {
+                                        navigator.clipboard.writeText(window.location.href)
+                                        setShareCopied(true)
+                                        setTimeout(() => setShareCopied(false), 2000)
+                                    }
+                                }
+                            } else {
+                                navigator.clipboard.writeText(window.location.href)
+                                setShareCopied(true)
+                                setTimeout(() => setShareCopied(false), 2000)
+                            }
+                        }}
+                        className={`flex items-center gap-2 text-sm transition-colors ${shareCopied ? 'text-green-600' : 'text-gray-400 hover:text-gray-700'}`}>
+                        {shareCopied ? <CheckCircle className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                        {shareCopied ? 'Link Copied!' : 'Share listing'}
                     </button>
                 </div>
             </div>
