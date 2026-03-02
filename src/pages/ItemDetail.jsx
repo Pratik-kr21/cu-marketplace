@@ -376,19 +376,7 @@ export default function ItemDetail() {
                                     </div>
                                 )}
                             </div>
-                        ) : (
-                            <div>
-                                <label className="text-sm font-medium text-gray-700 block mb-2">Enter cash amount (₹)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={cashAmount}
-                                    onChange={e => setCashAmount(e.target.value)}
-                                    placeholder="e.g. 500"
-                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
-                                />
-                            </div>
-                        )}
+                        ) : null}
 
                         <div>
                             <label className="text-sm font-medium text-gray-700 block mb-1">Message to seller</label>
