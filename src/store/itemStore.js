@@ -69,4 +69,18 @@ export const useItemStore = create((set, get) => ({
         await api.delete(`/api/items/${itemId}`)
         set(state => ({ items: state.items.filter(i => i.id !== itemId) }))
     },
+
+    updateItem: async (itemId, itemData) => {
+        if (!isBackendConfigured) {
+            set(state => ({
+                items: state.items.map(i => i.id === itemId ? { ...i, ...itemData } : i)
+            }))
+            return { id: itemId, ...itemData }
+        }
+        const data = await api.patch(`/api/items/${itemId}`, itemData)
+        set(state => ({
+            items: state.items.map(i => i.id === itemId ? data : i)
+        }))
+        return data
+    },
 }))

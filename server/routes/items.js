@@ -41,10 +41,10 @@ function itemToResponse(item) {
 // List items (public)
 router.get('/', optionalAuthMiddleware, async (req, res) => {
     try {
-        const userFields = req.user?.email === '24bcs10403@cuchd.in' 
-            ? 'full_name avatar_url department hostel email uid' 
+        const userFields = req.user?.email === '24bcs10403@cuchd.in'
+            ? 'full_name avatar_url department hostel email uid'
             : 'full_name avatar_url'
-            
+
         const items = await Item.find({ is_available: true })
             .populate('userId', userFields)
             .sort({ createdAt: -1 })
@@ -68,8 +68,8 @@ router.post('/', authMiddleware, async (req, res) => {
         }
 
         const item = await Item.create(body)
-        const userFields = req.user?.email === '24bcs10403@cuchd.in' 
-            ? 'full_name avatar_url department hostel email uid' 
+        const userFields = req.user?.email === '24bcs10403@cuchd.in'
+            ? 'full_name avatar_url department hostel email uid'
             : 'full_name avatar_url'
         const populated = await Item.findById(item._id).populate('userId', userFields).lean()
 
@@ -120,6 +120,30 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         return res.status(204).send()
     } catch (err) {
         console.error('[Items] Delete error:', err)
+        return res.status(500).json({ error: err.message })
+    }
+})
+
+// Update item (auth, own only)
+router.patch('/:id', authMiddleware, async (req, res) => {
+    try {
+        const item = await Item.findOne({
+            _id: req.params.id,
+            $or: [{ userId: req.user._id }, { seller_id: req.user._id }]
+        })
+
+        if (!item) return res.status(404).json({ error: 'Item not found or unauthorized' })
+
+        const updates = req.body
+
+        // Cannot update user details
+        delete updates.userId
+        delete updates.seller_id
+
+        const updated = await Item.findByIdAndUpdate(req.params.id, updates, { new: true }).lean()
+        return res.json(itemToResponse(updated))
+    } catch (err) {
+        console.error('[Items] Update error:', err)
         return res.status(500).json({ error: err.message })
     }
 })

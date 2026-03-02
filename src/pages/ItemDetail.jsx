@@ -2,11 +2,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useItemStore } from '../store/itemStore'
 import { useAuthStore } from '../store/authStore'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, MapPin, Star, ArrowRightLeft, MessageCircle, ShieldCheck, Share2, CheckCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, ArrowRightLeft, MessageCircle, ShieldCheck, Share2, CheckCircle, Loader2, Edit2 } from 'lucide-react'
 import Badge, { ConditionBadge } from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
+import Input, { Textarea } from '../components/ui/Input'
 import LazyImage from '../components/ui/LazyImage'
 import { api, isBackendConfigured } from '../lib/api'
 import { sendPushToUser } from '../lib/pushNotifications'
@@ -14,7 +15,7 @@ import { sendPushToUser } from '../lib/pushNotifications'
 export default function ItemDetail() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const { items, fetchItems, loading } = useItemStore()
+    const { items, fetchItems, loading, updateItem } = useItemStore()
     const { user } = useAuthStore()
     const [activeImg, setActiveImg] = useState(0)
     const [tradeModal, setTradeModal] = useState(false)
@@ -31,8 +32,48 @@ export default function ItemDetail() {
     const [msgSending, setMsgSending] = useState(false)
     const [shareCopied, setShareCopied] = useState(false)
 
+    // Edit State
+    const [editModal, setEditModal] = useState(false)
+    const [editLoading, setEditLoading] = useState(false)
+    const [editError, setEditError] = useState('')
+    const [editForm, setEditForm] = useState({ title: '', description: '', price: '', quantity: '' })
+
     const item = items.find(i => i.id === id)
     const isSeller = user?.id === item?.seller_id || user?.id === item?.seller?.id
+
+    const openEditModal = () => {
+        setEditForm({
+            title: item.title,
+            description: item.description,
+            price: item.price || '',
+            quantity: item.quantity || 1
+        })
+        setEditError('')
+        setEditModal(true)
+    }
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault()
+        setEditLoading(true)
+        setEditError('')
+        try {
+            const updates = {
+                title: editForm.title,
+                description: editForm.description,
+                quantity: Number(editForm.quantity) || 1
+            }
+            if (!item.is_barter_only) {
+                updates.price = Number(editForm.price) || 0
+                updates.is_free = updates.price === 0
+            }
+            await updateItem(item.id, updates)
+            setEditModal(false)
+        } catch (err) {
+            setEditError(err.message || 'Failed to update item.')
+        } finally {
+            setEditLoading(false)
+        }
+    }
 
     useEffect(() => {
         if (items.length === 0 && !loading) {
@@ -240,8 +281,13 @@ export default function ItemDetail() {
                         </div>
                     )}
                     {isSeller && (
-                        <div className="bg-brand-subtle border border-brand-light rounded-lg p-3 text-sm text-gray-700">
-                            This is your listing.
+                        <div className="flex gap-3">
+                            <div className="bg-brand-subtle border border-brand-light rounded-lg p-3 text-sm text-gray-700 flex-1 flex justify-center items-center">
+                                This is your listing.
+                            </div>
+                            <Button variant="outline" size="lg" className="flex-1" onClick={openEditModal}>
+                                <Edit2 className="w-4 h-4" /> Edit Listing
+                            </Button>
                         </div>
                     )}
 
@@ -402,6 +448,22 @@ export default function ItemDetail() {
                         </div>
                     </div>
                 )}
+            </Modal>
+            {/* Edit Item Modal */}
+            <Modal isOpen={editModal} onClose={() => !editLoading && setEditModal(false)} title="Edit Listing">
+                <form onSubmit={handleEditSubmit} className="p-4 space-y-4">
+                    <Input label="Title" value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} required />
+                    <Textarea label="Description" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} required rows={4} />
+                    {!item.is_barter_only && (
+                        <Input label="Price (₹)" type="number" value={editForm.price} onChange={e => setEditForm({ ...editForm, price: e.target.value })} min="0" required />
+                    )}
+                    <Input label="Quantity" type="number" value={editForm.quantity} onChange={e => setEditForm({ ...editForm, quantity: e.target.value })} min="1" required />
+                    {editError && <p className="text-xs text-red-500">{editError}</p>}
+                    <div className="flex gap-3 pt-2">
+                        <Button type="button" variant="secondary" className="flex-1" onClick={() => setEditModal(false)} disabled={editLoading}>Cancel</Button>
+                        <Button type="submit" className="flex-1" loading={editLoading}>Save Changes</Button>
+                    </div>
+                </form>
             </Modal>
         </div>
     )
