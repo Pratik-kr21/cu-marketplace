@@ -28,6 +28,7 @@ router.get('/', authMiddleware, async (req, res) => {
             convos.map(async (c) => {
                 const lastMsg = await Message.findOne({ conversation_id: c._id }).sort({ createdAt: -1 }).lean()
                 const messages = lastMsg ? [{ content: lastMsg.content, created_at: lastMsg.createdAt, sender_id: lastMsg.sender_id?.toString() }] : []
+                const unreadCount = await Message.countDocuments({ conversation_id: c._id, receiver_id: req.user._id, read: false })
                 return {
                     id: c._id.toString(),
                     item_id: c.item_id?._id?.toString(),
@@ -36,12 +37,24 @@ router.get('/', authMiddleware, async (req, res) => {
                     buyer: c.buyer_id ? { id: c.buyer_id._id.toString(), full_name: c.buyer_id.full_name, uid: c.buyer_id.uid } : null,
                     seller: c.seller_id ? { id: c.seller_id._id.toString(), full_name: c.seller_id.full_name, uid: c.seller_id.uid } : null,
                     messages,
+                    unread_count: unreadCount
                 }
             })
         )
         return res.json(withLastMessage)
     } catch (err) {
         console.error('[Conversations] List error:', err)
+        return res.status(500).json({ error: err.message })
+    }
+})
+
+// Get total unread message count
+router.get('/unread-count', authMiddleware, async (req, res) => {
+    try {
+        const count = await Message.countDocuments({ receiver_id: req.user._id, read: false })
+        return res.json({ count })
+    } catch (err) {
+        console.error('[Messages] Unread count error:', err)
         return res.status(500).json({ error: err.message })
     }
 })
@@ -90,6 +103,13 @@ router.get('/:id/messages', authMiddleware, async (req, res) => {
         const isParticipant =
             convo.buyer_id.toString() === req.user._id.toString() || convo.seller_id.toString() === req.user._id.toString()
         if (!isParticipant) return res.status(403).json({ error: 'Forbidden' })
+
+        // Mark messages as read for this user
+        await Message.updateMany(
+            { conversation_id: req.params.id, receiver_id: req.user._id, read: false },
+            { $set: { read: true } }
+        )
+
         const messages = await Message.find({ conversation_id: req.params.id })
             .sort({ createdAt: 1 })
             .lean()

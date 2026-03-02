@@ -35,9 +35,9 @@ export default function Chat() {
         profile?.full_name || user?.user_metadata?.full_name ||
         user?.email?.split('@')[0] || 'Me'
 
-    const fetchConversations = useCallback(async () => {
+    const fetchConversations = useCallback(async (isPolling = false) => {
         if (!user || !isBackendConfigured) { setLoadingConvos(false); return }
-        setLoadingConvos(true)
+        if (!isPolling) setLoadingConvos(true)
         try {
             const list = await api.get('/api/conversations')
             setConversations(list || [])
@@ -45,7 +45,7 @@ export default function Chat() {
         } catch {
             setConversations([])
         } finally {
-            setLoadingConvos(false)
+            if (!isPolling) setLoadingConvos(false)
         }
     }, [user, activeId])
 
@@ -55,6 +55,7 @@ export default function Chat() {
         try {
             const data = await api.get(`/api/conversations/${activeId}/messages`)
             setMessages(data || [])
+            setConversations(prev => prev.map(c => c.id === activeId ? { ...c, unread_count: 0 } : c))
         } catch (err) {
             console.error('Error loading messages:', err)
         } finally {
@@ -67,7 +68,10 @@ export default function Chat() {
 
     useEffect(() => {
         if (!activeId || !isBackendConfigured) return
-        const interval = setInterval(() => fetchMessages(true), POLL_INTERVAL)
+        const interval = setInterval(() => {
+            fetchMessages(true)
+            fetchConversations(true)
+        }, POLL_INTERVAL)
         return () => clearInterval(interval)
     }, [activeId, fetchMessages])
 
@@ -180,8 +184,17 @@ export default function Chat() {
                                                 {timeAgo(lastMsg?.created_at || c.created_at)}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 truncate">{lastMsg?.content || 'No messages yet'}</p>
-                                        <p className="text-xs text-brand-red truncate">{c.item?.title}</p>
+                                        <div className="flex items-center justify-between mt-0.5">
+                                            <div className="flex flex-col min-w-0 flex-1">
+                                                <p className="text-xs text-gray-500 truncate">{lastMsg?.content || 'No messages yet'}</p>
+                                                <p className="text-xs text-brand-red truncate pr-2">{c.item?.title}</p>
+                                            </div>
+                                            {c.unread_count > 0 && activeId !== c.id && (
+                                                <span className="bg-brand-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1">
+                                                    {c.unread_count}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             )

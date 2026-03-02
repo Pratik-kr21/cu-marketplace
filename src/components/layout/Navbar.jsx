@@ -1,16 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import Avatar from '../ui/Avatar'
 import NotificationBell from '../ui/NotificationBell'
-import { isBackendConfigured } from '../../lib/api'
+import { api, isBackendConfigured } from '../../lib/api'
 
 export default function Navbar() {
     const { user, profile, signOut, demoLogin } = useAuthStore()
     const [mobileOpen, setMobileOpen] = useState(false)
     const [userMenuOpen, setUserMenuOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
     const navigate = useNavigate()
+
+    useEffect(() => {
+        if (!user || !isBackendConfigured) return
+        const fetchUnread = async () => {
+            try {
+                const res = await api.get('/api/conversations/unread-count')
+                setUnreadCount(res.count || 0)
+            } catch (err) { }
+        }
+        fetchUnread()
+        const interval = setInterval(fetchUnread, 15000) // Poll every 15s
+        return () => clearInterval(interval)
+    }, [user])
 
     // Same fallback chain as Profile page
     const displayName =
@@ -27,7 +41,7 @@ export default function Navbar() {
     const navLinks = [
         { to: '/marketplace', label: 'Browse' },
         { to: '/trades', label: 'My Trades' },
-        { to: '/chat', label: 'Messages' },
+        { to: '/chat', label: 'Messages', badge: unreadCount },
     ]
 
     return (
@@ -45,14 +59,15 @@ export default function Navbar() {
 
                 {/* Desktop Nav */}
                 <nav className="hidden md:flex items-center gap-1">
-                    {navLinks.map(({ to, label }) => (
+                    {navLinks.map(({ to, label, badge }) => (
                         <NavLink
                             key={to} to={to}
                             className={({ isActive }) =>
-                                `px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'text-brand-red bg-brand-subtle' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`
+                                `px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${isActive ? 'text-brand-red bg-brand-subtle' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`
                             }
                         >
                             {label}
+                            {badge > 0 && <span className="bg-brand-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
                         </NavLink>
                     ))}
                 </nav>
@@ -68,6 +83,9 @@ export default function Navbar() {
                             </Link>
                             <Link to="/chat" className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors relative">
                                 <MessageCircle className="w-5 h-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-brand-red rounded-full"></span>
+                                )}
                             </Link>
                             <NotificationBell />
                             {user.email === '24bcs10403@cuchd.in' && (
@@ -120,12 +138,15 @@ export default function Navbar() {
             {/* Mobile Nav */}
             {mobileOpen && (
                 <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 space-y-1 animate-fade-in">
-                    {navLinks.map(({ to, label }) => (
+                    {navLinks.map(({ to, label, badge }) => (
                         <NavLink key={to} to={to} onClick={() => setMobileOpen(false)}
                             className={({ isActive }) =>
-                                `block px-3 py-2 rounded-md text-sm font-medium ${isActive ? 'text-brand-red bg-brand-subtle' : 'text-gray-700 hover:bg-gray-50'}`
+                                `flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium ${isActive ? 'text-brand-red bg-brand-subtle' : 'text-gray-700 hover:bg-gray-50'}`
                             }
-                        >{label}</NavLink>
+                        >
+                            <span>{label}</span>
+                            {badge > 0 && <span className="bg-brand-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{badge}</span>}
+                        </NavLink>
                     ))}
                     {user && (
                         <Link to="/create-listing" onClick={() => setMobileOpen(false)} className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-brand-red">
