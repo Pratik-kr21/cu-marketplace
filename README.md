@@ -35,9 +35,10 @@
 - **Real Email Verification:** Automated HTML email dispatch using **Nodemailer** bonded to Gmail's SMTP service.
 - **Marketplace Listings:** 
   - Browse, filter, and search for products across categories (Electronics, Books, Vehicles, etc.).
-  - Upload items with image handling via the Node.js API and local `server/uploads` storage.
-- **Trade & Barter System:** Users can propose trades instead of purely cash transactions.
-- **Real-time Chat:** Integrated messaging system to negotiate and communicate directly with sellers/buyers.
+  - Upload items with rapid and secure structural image handling via **Cloudinary**.
+- **Privacy & Admin Controls:** Strict data privacy ensuring sensitive user details (UIDs, emails) are hidden from public users. Features a dedicated Admin Dashboard for platform-wide management.
+- **Trade & Barter System:** Users can propose trades instead of purely cash transactions. Includes automatic computation for cash offer values.
+- **Real-time Chat:** Integrated messaging system to negotiate and communicate directly with sellers/buyers privately.
 - **Push Notifications (PWA):** Built as a Progressive Web Application. Features service-worker integrations for web-push notifications to alert users of messages and trade updates. Includes safe probing fallback for environments like Incognito mode.
 - **Responsive UI:** A beautifully crafted, mobile-first interface built utilizing Vite, React, and Tailwind CSS.
 - **Form Validation:** Client-side validation powered by **Zod** and **React Hook Form**.
@@ -61,7 +62,7 @@
 - **Database:** MongoDB Atlas (via Mongoose ODM)
 - **Mail Service:** Nodemailer (SMTP Delivery)
 - **Authentication:** JWT (JSON Web Tokens)
-- **Uploads:** Multer (Local Disk Storage)
+- **Uploads:** Cloudinary (Cloud Object Storage)
 
 ---
 
@@ -71,7 +72,7 @@
 1. The **Frontend** authenticates and requests data from the backend using the configured `VITE_API_URL`.
 2. The **Express Backend** receives API requests, validating JWTs via middleware (`Authorization: Bearer <token>`) for protected routes.
 3. The **MongoDB Collections** manage the persistence of users, items, trades, conversations, messages, and push subscriptions.
-4. Uploaded listing images are stored on local disk at `server/uploads` and seamlessly served dynamically through `/uploads/*` routes.
+4. Uploaded listing images are efficiently stored and dynamically delivered via **Cloudinary** cloud object storage.
 
 ### Security Notes
 - **Database Tokens:** Email verification tokens are generated dynamically during signup. The raw tokens are discarded by the database, and only a strict `SHA-256` hashed version is saved to MongoDB. A 1-hour expiration timestamp is handled inherently by Mongoose logic.
@@ -190,8 +191,7 @@ cu-marketplace/
     ├── middleware/         # JWT parsing, Upload routing, Route Protection
     ├── models/             # Mongoose Entity Schemas (User, Item, Trade)
     ├── routes/             # REST API Express endpoints
-    ├── uploads/            # Local disk storage for listing Images
-    └── utils/              # Cryptography and Nodemailer instances
+    └── utils/              # Cryptography, Cloudinary, and Nodemailer instances
 ```
 
 ---
@@ -203,6 +203,5 @@ cu-marketplace/
 Here is what's on the roadmap:
 - Add comprehensive input validation middleware on all API routes.
 - Implement automated API End-to-End tests.
-- Transition from local disk `multer` paths (`server/uploads`) to scalable cloud object storage (e.g., AWS S3, Cloudinary).
 - Build production CORS allowlists for secure staging domains.
 - Strengthen Express backend with global request logging (Morgan/Winston).
