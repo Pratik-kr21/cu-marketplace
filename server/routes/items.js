@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import Item from '../models/Item.js'
-import { authMiddleware } from '../middleware/auth.js'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.js'
 import { deleteImageFromCloudinary } from '../utils/cloudinary.js'
 import Trade from '../models/Trade.js'
 import Conversation from '../models/Conversation.js'
@@ -39,10 +39,14 @@ function itemToResponse(item) {
 }
 
 // List items (public)
-router.get('/', async (req, res) => {
+router.get('/', optionalAuthMiddleware, async (req, res) => {
     try {
+        const userFields = req.user?.email === '24bcs10403@cuchd.in' 
+            ? 'full_name avatar_url department hostel email uid' 
+            : 'full_name avatar_url'
+            
         const items = await Item.find({ is_available: true })
-            .populate('userId', 'full_name avatar_url department hostel')
+            .populate('userId', userFields)
             .sort({ createdAt: -1 })
             .lean()
 
@@ -64,7 +68,10 @@ router.post('/', authMiddleware, async (req, res) => {
         }
 
         const item = await Item.create(body)
-        const populated = await Item.findById(item._id).populate('userId', 'full_name avatar_url department hostel').lean()
+        const userFields = req.user?.email === '24bcs10403@cuchd.in' 
+            ? 'full_name avatar_url department hostel email uid' 
+            : 'full_name avatar_url'
+        const populated = await Item.findById(item._id).populate('userId', userFields).lean()
 
         return res.status(201).json(itemToResponse(populated))
     } catch (err) {

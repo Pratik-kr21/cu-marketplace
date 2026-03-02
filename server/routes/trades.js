@@ -32,10 +32,14 @@ router.get('/', authMiddleware, async (req, res) => {
     try {
         const tab = req.query.tab || 'incoming'
         const filter = tab === 'incoming' ? { seller_id: req.user._id } : { buyer_id: req.user._id }
+        const userFields = req.user?.email === '24bcs10403@cuchd.in'
+            ? 'full_name uid email department hostel avatar_url'
+            : 'full_name avatar_url'
+
         const trades = await Trade.find(filter)
             .populate('item_id', 'title images')
-            .populate('buyer_id', 'full_name uid')
-            .populate('seller_id', 'full_name uid')
+            .populate('buyer_id', userFields)
+            .populate('seller_id', userFields)
             .sort({ createdAt: -1 })
             .lean()
         const list = trades.map(t => ({
@@ -76,10 +80,14 @@ router.post('/', authMiddleware, async (req, res) => {
             message: message || '',
             status: 'pending',
         })
+        const userFields = req.user?.email === '24bcs10403@cuchd.in'
+            ? 'full_name uid email department hostel avatar_url'
+            : 'full_name avatar_url'
+
         const populated = await Trade.findById(trade._id)
             .populate('item_id', 'title images')
-            .populate('buyer_id', 'full_name uid')
-            .populate('seller_id', 'full_name uid')
+            .populate('buyer_id', userFields)
+            .populate('seller_id', userFields)
             .lean()
         return res.status(201).json(tradeToResponse({ ...populated, _id: trade._id }))
     } catch (err) {

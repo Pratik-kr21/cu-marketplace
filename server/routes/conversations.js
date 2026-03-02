@@ -11,12 +11,16 @@ const router = Router()
 // List conversations for current user
 router.get('/', authMiddleware, async (req, res) => {
     try {
+        const userFields = req.user?.email === '24bcs10403@cuchd.in'
+            ? 'full_name uid email department hostel avatar_url'
+            : 'full_name avatar_url'
+
         const convos = await Conversation.find({
             $or: [{ buyer_id: req.user._id }, { seller_id: req.user._id }],
         })
             .populate('item_id', 'title')
-            .populate('buyer_id', 'full_name uid')
-            .populate('seller_id', 'full_name uid')
+            .populate('buyer_id', userFields)
+            .populate('seller_id', userFields)
             .sort({ updatedAt: -1 })
             .lean()
 
@@ -47,17 +51,21 @@ router.post('/upsert', authMiddleware, async (req, res) => {
     try {
         const { item_id, seller_id } = req.body
         if (!item_id || !seller_id) return res.status(400).json({ error: 'item_id and seller_id required' })
+        const userFields = req.user?.email === '24bcs10403@cuchd.in'
+            ? 'full_name uid email department hostel avatar_url'
+            : 'full_name avatar_url'
+
         let convo = await Conversation.findOne({ item_id, buyer_id: req.user._id })
             .populate('item_id', 'title')
-            .populate('buyer_id', 'full_name uid')
-            .populate('seller_id', 'full_name uid')
+            .populate('buyer_id', userFields)
+            .populate('seller_id', userFields)
             .lean()
         if (!convo) {
             const created = await Conversation.create({ item_id, buyer_id: req.user._id, seller_id })
             convo = await Conversation.findById(created._id)
                 .populate('item_id', 'title')
-                .populate('buyer_id', 'full_name uid')
-                .populate('seller_id', 'full_name uid')
+                .populate('buyer_id', userFields)
+                .populate('seller_id', userFields)
                 .lean()
         }
         return res.json({

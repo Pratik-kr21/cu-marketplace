@@ -17,3 +17,21 @@ export async function authMiddleware(req, res, next) {
         return res.status(401).json({ error: 'Invalid or expired token' })
     }
 }
+
+export async function optionalAuthMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    if (!token) {
+        return next()
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret')
+        const user = await User.findById(decoded.userId).select('-password')
+        if (user) {
+            req.user = user
+        }
+    } catch (err) {
+        // Just proceed without req.user if token is invalid/expired
+    }
+    next()
+}
