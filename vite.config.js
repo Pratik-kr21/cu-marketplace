@@ -53,6 +53,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        importScripts: ['/push-sw.js'],
         // Cache all pages for offline fallback
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
         runtimeCaching: [

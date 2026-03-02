@@ -64,6 +64,15 @@ export async function isPushSubscribed() {
         const reg = await navigator.serviceWorker.getRegistration()
         if (!reg) return false
         const sub = await reg.pushManager.getSubscription()
+        if (sub && isBackendConfigured) {
+            const { endpoint } = sub
+            const keys = sub.toJSON().keys
+            if (keys) {
+                api.post('/api/push/subscribe', { endpoint, p256dh: keys.p256dh, auth: keys.auth }).catch(err => {
+                    console.warn('Silent push sync failed:', err)
+                })
+            }
+        }
         return !!sub
     } catch {
         return false
