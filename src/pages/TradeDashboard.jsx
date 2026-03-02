@@ -267,7 +267,7 @@ export default function TradeDashboard() {
                                                 loading={actionLoading === trade.id + 'completed'}
                                                 onClick={() => handleAction(trade.id, 'completed')}
                                             >
-                                                Got the Product!
+                                                {isIncoming ? 'Product Delivered!' : 'Got the Product!'}
                                             </Button>
                                         </div>
                                     </div>
@@ -276,7 +276,7 @@ export default function TradeDashboard() {
                                 {trade.status === 'completed' && (
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 font-medium flex items-center gap-2">
                                         <CheckCircle className="w-4 h-4 text-blue-600" />
-                                        Trade completed successfully! You got the product.
+                                        Trade completed successfully! {isIncoming ? 'Product delivered.' : 'You got the product.'}
                                     </div>
                                 )}
                             </div>
