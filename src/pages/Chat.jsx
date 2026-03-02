@@ -89,15 +89,7 @@ export default function Chat() {
         const optimistic = { id: `opt-${Date.now()}`, content: text, sender_id: user.id, created_at: new Date().toISOString() }
         setMessages(prev => [...prev, optimistic])
         try {
-            const activeConvoData = conversations.find(c => c.id === activeId)
-            const receiverId = activeConvoData
-                ? (activeConvoData.buyer?.id === user.id ? activeConvoData.seller?.id : activeConvoData.buyer?.id)
-                : null
             await api.post(`/api/conversations/${activeId}/messages`, { content: text })
-            if (receiverId) {
-                const senderName = profile?.full_name || user?.email?.split('@')[0] || 'Someone'
-                sendPushToUser(receiverId, `New message from ${senderName}`, text, '/chat')
-            }
         } catch (err) {
             console.error('Send failed:', err)
             setMessages(prev => prev.filter(m => m.id !== optimistic.id))

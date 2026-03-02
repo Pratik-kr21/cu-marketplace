@@ -18,9 +18,9 @@ export async function subscribeToPush(userId) {
         const permission = await Notification.requestPermission()
         if (permission !== 'granted') return 'denied'
 
-        const reg = await navigator.serviceWorker.getRegistration()
-        if (!reg) {
-            console.warn('No active Service Worker found. Please click install app or refresh.')
+        const reg = await navigator.serviceWorker.ready
+        if (!reg || !reg.pushManager) {
+            console.warn('No active Service Worker with PushManager found.')
             return 'denied'
         }
 
@@ -43,8 +43,8 @@ export async function subscribeToPush(userId) {
 export async function unsubscribeFromPush(userId) {
     if (!('serviceWorker' in navigator)) return
     try {
-        const reg = await navigator.serviceWorker.getRegistration()
-        if (!reg) return
+        const reg = await navigator.serviceWorker.ready
+        if (!reg || !reg.pushManager) return
 
         const subscription = await reg.pushManager.getSubscription()
         if (!subscription) return
@@ -61,8 +61,8 @@ export async function unsubscribeFromPush(userId) {
 export async function isPushSubscribed() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false
     try {
-        const reg = await navigator.serviceWorker.getRegistration()
-        if (!reg) return false
+        const reg = await navigator.serviceWorker.ready
+        if (!reg || !reg.pushManager) return false
         const sub = await reg.pushManager.getSubscription()
         if (sub && isBackendConfigured) {
             const { endpoint } = sub
