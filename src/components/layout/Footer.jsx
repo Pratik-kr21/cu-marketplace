@@ -1,5 +1,25 @@
 import { Link } from 'react-router-dom'
-import { ShoppingBag, Github, Heart } from 'lucide-react'
+import { ShoppingBag, Heart, CheckCircle } from 'lucide-react'
+import { useAuthStore } from '../../store/authStore'
+
+function CommunityLink() {
+    const { user } = useAuthStore()
+
+    if (user) {
+        return (
+            <span className="inline-flex items-center gap-1.5 text-green-400 font-medium">
+                <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                You&apos;re part of our community! 🎓
+            </span>
+        )
+    }
+
+    return (
+        <Link to="/signup" className="hover:text-white transition-colors">
+            Join the community
+        </Link>
+    )
+}
 
 export default function Footer() {
     return (
@@ -31,7 +51,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm">
                             <li><span className="text-gray-400">For CU Students only</span></li>
                             <li><span className="text-gray-400">Requires @cuchd.in email</span></li>
-                            <li><Link to="/signup" className="hover:text-white transition-colors">Join the community</Link></li>
+                            <li><CommunityLink /></li>
                         </ul>
                     </div>
                 </div>
