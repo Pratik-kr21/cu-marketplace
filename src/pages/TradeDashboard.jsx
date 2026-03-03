@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
+import { ArrowRightLeft, Clock, CheckCircle, XCircle, RefreshCw, Star } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { api, isBackendConfigured } from '../lib/api'
 import Button from '../components/ui/Button'
@@ -21,6 +21,96 @@ const StatusBadge = ({ status }) => {
     )
 }
 
+// ⭐ Star Rating Modal
+function RateSellerModal({ trade, onClose, onSubmitted }) {
+    const [score, setScore] = useState(0)
+    const [hovered, setHovered] = useState(0)
+    const [comment, setComment] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
+
+    const handleSubmit = async () => {
+        if (!score) return setError('Please select a star rating.')
+        setLoading(true)
+        setError('')
+        try {
+            await api.post('/api/ratings', { trade_id: trade.id, score, comment })
+            onSubmitted(trade.id, score)
+            onClose()
+        } catch (err) {
+            setError(err.message || 'Failed to submit rating.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-modal max-w-sm w-full p-6 animate-scale-in">
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-1">Rate the Seller</h3>
+                <p className="text-sm text-gray-500 text-center mb-5">
+                    How was your experience with <strong>{trade.seller?.full_name || 'the seller'}</strong>?
+                </p>
+
+                {/* Stars */}
+                <div className="flex justify-center gap-2 mb-5">
+                    {[1, 2, 3, 4, 5].map(s => (
+                        <button
+                            key={s}
+                            onMouseEnter={() => setHovered(s)}
+                            onMouseLeave={() => setHovered(0)}
+                            onClick={() => setScore(s)}
+                            className="transition-transform hover:scale-110"
+                        >
+                            <Star
+                                className={`w-9 h-9 transition-colors ${s <= (hovered || score)
+                                        ? 'fill-amber-400 text-amber-400'
+                                        : 'text-gray-200'
+                                    }`}
+                            />
+                        </button>
+                    ))}
+                </div>
+                {score > 0 && (
+                    <p className="text-center text-sm font-medium text-amber-600 mb-4">
+                        {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent!'][score]}
+                    </p>
+                )}
+
+                {/* Comment */}
+                <textarea
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    placeholder="Optional: leave a comment for the seller…"
+                    rows={3}
+                    maxLength={300}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red mb-4"
+                />
+
+                {error && <p className="text-xs text-red-600 text-center mb-3">{error}</p>}
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={onClose}
+                        disabled={loading}
+                        className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={loading || !score}
+                        className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                        {loading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Star className="w-4 h-4" />}
+                        Submit Rating
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 function timeAgo(dateStr) {
     if (!dateStr) return ''
     const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
@@ -37,6 +127,8 @@ export default function TradeDashboard() {
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState(null)
     const [error, setError] = useState('')
+    const [ratingTrade, setRatingTrade] = useState(null)   // trade being rated
+    const [ratedTradeIds, setRatedTradeIds] = useState({}) // { tradeId: score }
 
     const fetchTrades = useCallback(async () => {
         if (!user || !isBackendConfigured) {
@@ -49,6 +141,19 @@ export default function TradeDashboard() {
         try {
             const data = await api.get(`/api/trades?tab=${tab}`)
             setTrades(data || [])
+
+            // For outgoing completed trades, check which ones are already rated
+            if (tab === 'outgoing') {
+                const completedTrades = (data || []).filter(t => t.status === 'completed')
+                const checks = await Promise.all(
+                    completedTrades.map(t =>
+                        api.get(`/api/ratings/trade/${t.id}`).then(r => ({ id: t.id, rated: r.rated, score: r.rating?.score })).catch(() => ({ id: t.id, rated: false }))
+                    )
+                )
+                const map = {}
+                checks.forEach(c => { if (c.rated) map[c.id] = c.score })
+                setRatedTradeIds(map)
+            }
         } catch (err) {
             console.error('fetchTrades error:', err)
             setError('Could not load trades. ' + (err.message || ''))
@@ -95,6 +200,13 @@ export default function TradeDashboard() {
 
     return (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 animate-fade-in">
+            {ratingTrade && (
+                <RateSellerModal
+                    trade={ratingTrade}
+                    onClose={() => setRatingTrade(null)}
+                    onSubmitted={(tradeId, score) => setRatedTradeIds(prev => ({ ...prev, [tradeId]: score }))}
+                />
+            )}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-brand-red/10 rounded-lg flex items-center justify-center">
@@ -274,9 +386,30 @@ export default function TradeDashboard() {
                                 )}
 
                                 {trade.status === 'completed' && (
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 font-medium flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-blue-600" />
-                                        Trade completed successfully! {isIncoming ? 'Product delivered.' : 'You got the product.'}
+                                    <div className="space-y-2">
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 font-medium flex items-center gap-2">
+                                            <CheckCircle className="w-4 h-4 text-blue-600" />
+                                            Trade completed successfully! {isIncoming ? 'Product delivered.' : 'You got the product.'}
+                                        </div>
+                                        {/* Buyer can rate the seller */}
+                                        {!isIncoming && (
+                                            ratedTradeIds[trade.id] ? (
+                                                <div className="flex items-center gap-1.5 text-xs text-amber-600 font-medium">
+                                                    <span>Your rating:</span>
+                                                    {[1, 2, 3, 4, 5].map(s => (
+                                                        <Star key={s} className={`w-4 h-4 ${s <= ratedTradeIds[trade.id] ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setRatingTrade(trade)}
+                                                    className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg px-3 py-2 transition-colors"
+                                                >
+                                                    <Star className="w-3.5 h-3.5" />
+                                                    Rate the Seller
+                                                </button>
+                                            )
+                                        )}
                                     </div>
                                 )}
                             </div>

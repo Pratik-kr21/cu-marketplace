@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
+import Trade from '../models/Trade.js'
 import { sendEmail } from '../utils/email.js'
 import { generateVerificationToken, hashToken } from '../utils/token.js'
 
@@ -402,21 +403,39 @@ export const login = async (req, res) => {
 // @desc    Get current user profile
 // @route   GET /api/auth/me
 // @access  Private
-export const getMe = (req, res) => {
-    const profile = profileToJSON(req.user)
-    return res.json({
-        user: {
-            id: profile.id,
-            email: profile.email,
-            user_metadata: {
-                full_name: profile.full_name,
-                uid: profile.uid,
-                department: profile.department,
-                hostel: profile.hostel
-            }
-        },
-        profile,
-    })
+export const getMe = async (req, res) => {
+    try {
+        const userId = req.user._id
+        const [soldCount, tradeCount] = await Promise.all([
+            // sold_count: completed trades where this user is the seller
+            Trade.countDocuments({ seller_id: userId, status: 'completed' }),
+            // trade_count: all completed trades where user was buyer or seller
+            Trade.countDocuments({ $or: [{ seller_id: userId }, { buyer_id: userId }], status: 'completed' }),
+        ])
+
+        const profile = profileToJSON(req.user)
+        return res.json({
+            user: {
+                id: profile.id,
+                email: profile.email,
+                user_metadata: {
+                    full_name: profile.full_name,
+                    uid: profile.uid,
+                    department: profile.department,
+                    hostel: profile.hostel
+                }
+            },
+            profile: {
+                ...profile,
+                trade_count: tradeCount,
+                sold_count: soldCount,
+                rating: req.user.rating ?? null,
+            },
+        })
+    } catch (err) {
+        console.error('[Auth] getMe error:', err)
+        return res.status(500).json({ error: 'Failed to get profile' })
+    }
 }
 
 // @desc    Delete Current User Account

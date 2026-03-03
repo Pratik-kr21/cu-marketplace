@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     hostel: { type: String, default: '' },
     avatar_url: { type: String, default: null },
     isVerified: { type: Boolean, default: false },
+    rating: { type: Number, default: null },
     emailVerificationToken: { type: String, default: null },
     emailVerificationExpires: { type: Date, default: null },
     resetPasswordToken: { type: String, default: null },
