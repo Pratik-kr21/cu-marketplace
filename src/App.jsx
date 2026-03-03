@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { ShoppingBag } from 'lucide-react'
@@ -40,6 +40,12 @@ function AuthSplash() {
     )
 }
 
+function ScrollToTop() {
+    const { pathname } = useLocation()
+    useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+    return null
+}
+
 export default function App() {
     const init = useAuthStore(s => s.init)
     const loading = useAuthStore(s => s.loading)
@@ -50,6 +56,7 @@ export default function App() {
     return (
         <BrowserRouter>
             <div className="min-h-screen flex flex-col">
+                <ScrollToTop />
                 <InstallPWA />
                 <NotificationPrompt />
                 <Navbar />
