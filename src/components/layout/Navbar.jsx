@@ -46,10 +46,10 @@ export default function Navbar() {
 
     return (
         <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between w-full">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 relative flex items-center justify-between">
                 
                 {/* Left Section: Logo & Nav */}
-                <div className="flex items-center gap-6 flex-1">
+                <div className="flex items-center gap-6">
                     <Link to="/" className="flex items-center gap-2 flex-shrink-0">
                         <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-sm">
                             <ShoppingBag className="w-4 h-4 text-white" />
@@ -74,9 +74,9 @@ export default function Navbar() {
                     </nav>
                 </div>
 
-                {/* Center Section: Developer Credit */}
-                <div className="hidden md:flex flex-col items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest leading-none mb-1">Developed by</span>
+                {/* Center Section: Developer Credit (Absolutely Centered) */}
+                <div className="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center whitespace-nowrap z-10">
+                    <span className="text-[10px] font-medium text-gray-400 text-center uppercase tracking-widest leading-none mb-1">Developed by</span>
                     <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-gray-700">Pratik Kumar</span>
                         <span className="text-gray-300">·</span>
@@ -102,7 +102,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Right Section: Actions */}
-                <div className="flex items-center justify-end gap-2 flex-1">
+                <div className="flex items-center gap-2">
                     {user ? (
                         <>
                             <Link to="/create-listing">
