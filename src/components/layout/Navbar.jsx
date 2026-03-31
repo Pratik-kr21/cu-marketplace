@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package, ShieldAlert, Github, Linkedin } from 'lucide-react'
+import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import Avatar from '../ui/Avatar'
 import NotificationBell from '../ui/NotificationBell'
@@ -46,11 +46,9 @@ export default function Navbar() {
 
     return (
         <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 relative flex items-center justify-between">
-                
-                {/* Left Section: Logo & Nav */}
-                <div className="flex items-center gap-6">
-                    <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+                {/* Logo */}
+                <Link to="/" className="flex items-center gap-2 flex-shrink-0">
                         <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-sm">
                             <ShoppingBag className="w-4 h-4 text-white" />
                         </div>
@@ -59,7 +57,8 @@ export default function Navbar() {
                         </span>
                     </Link>
 
-                    <nav className="hidden md:flex items-center gap-1">
+                {/* Desktop Nav */}
+                <nav className="hidden md:flex items-center gap-1">
                         {navLinks.map(({ to, label, badge }) => (
                             <NavLink
                                 key={to} to={to}
@@ -71,37 +70,9 @@ export default function Navbar() {
                                 {badge > 0 && <span className="bg-brand-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
                             </NavLink>
                         ))}
-                    </nav>
-                </div>
+                </nav>
 
-                {/* Center Section: Developer Credit (Absolutely Centered) */}
-                <div className="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center whitespace-nowrap z-10">
-                    <span className="text-[10px] font-medium text-gray-400 text-center uppercase tracking-widest leading-none mb-1">Developed by</span>
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-gray-700">Pratik Kumar</span>
-                        <span className="text-gray-300">·</span>
-                        <a
-                            href="https://www.linkedin.com/in/kumarpratik21/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="LinkedIn Profile"
-                            className="flex items-center gap-0.5 text-[#0077B5] hover:text-[#005885] transition-colors group"
-                        >
-                            <Linkedin className="w-3.5 h-3.5" />
-                        </a>
-                        <a
-                            href="https://github.com/Pratik-kr21"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="GitHub Profile"
-                            className="flex items-center gap-0.5 text-gray-600 hover:text-gray-900 transition-colors"
-                        >
-                            <Github className="w-3.5 h-3.5" />
-                        </a>
-                    </div>
-                </div>
-
-                {/* Right Section: Actions */}
+                {/* Actions */}
                 <div className="flex items-center gap-2">
                     {user ? (
                         <>
