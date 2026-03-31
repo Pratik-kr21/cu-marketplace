@@ -5,7 +5,13 @@
 
 const BASE = import.meta.env.VITE_API_URL || ''
 
-export const isBackendConfigured = Boolean(BASE && BASE.startsWith('http'))
+// On Vercel, the API and Frontend share the same domain. So BASE might be empty string.
+// We enable backend when there's an http BASE OR we are in production.
+export const isBackendConfigured = Boolean(
+    (BASE && BASE.startsWith('http')) || 
+    import.meta.env.MODE === 'production' || 
+    import.meta.env.PROD
+)
 
 export function getToken() {
     return localStorage.getItem('token') || ''
