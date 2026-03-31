@@ -76,7 +76,7 @@ export default function Navbar() {
                 <div className="hidden md:flex flex-col items-center justify-center">
                     <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest leading-none mb-1">Developed by</span>
                     <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-gray-700">Kumar Pratik</span>
+                        <span className="text-xs font-semibold text-gray-700">Pratik Kumar</span>
                         <span className="text-gray-300">·</span>
                         <a
                             href="https://www.linkedin.com/in/kumarpratik21/"
