@@ -46,34 +46,36 @@ export default function Navbar() {
 
     return (
         <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4" style={{display:'grid', gridTemplateColumns:'auto 1fr auto', alignItems:'center', gap:'1rem'}}>
-                {/* Logo */}
-                <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-                    <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-sm">
-                        <ShoppingBag className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-bold text-gray-900 text-lg hidden sm:block">
-                        CU <span className="text-brand-red">Market</span>
-                    </span>
-                </Link>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between w-full">
+                
+                {/* Left Section: Logo & Nav */}
+                <div className="flex items-center gap-6 flex-1">
+                    <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+                        <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-sm">
+                            <ShoppingBag className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-bold text-gray-900 text-lg hidden sm:block">
+                            CU <span className="text-brand-red">Market</span>
+                        </span>
+                    </Link>
 
-                {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-1">
-                    {navLinks.map(({ to, label, badge }) => (
-                        <NavLink
-                            key={to} to={to}
-                            className={({ isActive }) =>
-                                `px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${isActive ? 'text-brand-red bg-brand-subtle' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`
-                            }
-                        >
-                            {label}
-                            {badge > 0 && <span className="bg-brand-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
-                        </NavLink>
-                    ))}
-                </nav>
+                    <nav className="hidden md:flex items-center gap-1">
+                        {navLinks.map(({ to, label, badge }) => (
+                            <NavLink
+                                key={to} to={to}
+                                className={({ isActive }) =>
+                                    `px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${isActive ? 'text-brand-red bg-brand-subtle' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`
+                                }
+                            >
+                                {label}
+                                {badge > 0 && <span className="bg-brand-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
+                            </NavLink>
+                        ))}
+                    </nav>
+                </div>
 
-                {/* Center: Developer Credit */}
-                <div className="hidden md:flex flex-col items-center justify-center">
+                {/* Center Section: Developer Credit */}
+                <div className="hidden md:flex flex-col items-center justify-center flex-shrink-0">
                     <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest leading-none mb-1">Developed by</span>
                     <div className="flex items-center gap-1.5">
                         <span className="text-xs font-semibold text-gray-700">Pratik Kumar</span>
@@ -99,8 +101,8 @@ export default function Navbar() {
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
+                {/* Right Section: Actions */}
+                <div className="flex items-center justify-end gap-2 flex-1">
                     {user ? (
                         <>
                             <Link to="/create-listing">
