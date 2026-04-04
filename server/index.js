@@ -12,6 +12,7 @@ import uploadRoutes from './routes/upload.js'
 import pushRoutes from './routes/push.js'
 import adminRoutes from './routes/admin.js'
 import ratingsRoutes from './routes/ratings.js'
+import contactRoutes from './routes/contact.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 await connectDB()
@@ -30,6 +31,7 @@ app.use('/api/upload', uploadRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/ratings', ratingsRoutes)
+app.use('/api/contact', contactRoutes)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 

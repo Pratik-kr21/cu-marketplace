@@ -33,9 +33,12 @@ export default function Footer() {
                             </div>
                             <span className="font-bold text-white text-base">CU Market</span>
                         </div>
-                        <p className="text-sm text-gray-400 leading-relaxed">
+                        <p className="text-sm text-gray-400 leading-relaxed max-w-xs mb-4">
                             The exclusive second-hand marketplace and barter platform for Chandigarh University students.
                         </p>
+                        <Link to="/contact" className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors border border-gray-700 w-fit">
+                            👨‍💻 Contact Developers
+                        </Link>
                     </div>
                     <div>
                         <h4 className="text-sm font-semibold text-white mb-3">Platform</h4>

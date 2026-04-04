@@ -21,6 +21,7 @@ import VerifyEmail from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import AdminDashboard from './pages/AdminDashboard'
+import DeveloperContact from './pages/DeveloperContact'
 
 function AuthSplash() {
     return (
@@ -75,6 +76,7 @@ export default function App() {
                         <Route path="/trades" element={<ProtectedRoute><TradeDashboard /></ProtectedRoute>} />
                         <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
                         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                        <Route path="/contact" element={<ProtectedRoute><DeveloperContact /></ProtectedRoute>} />
                         <Route path="*" element={
                             <div className="flex flex-col items-center justify-center py-24 gap-4">
                                 <h1 className="text-6xl font-extrabold text-gray-200">404</h1>
