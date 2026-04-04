@@ -62,7 +62,7 @@ export default function DeveloperContact() {
                                     <p className="font-semibold break-all">kumarpratik21@outlook.com</p>
                                 </div>
                             </a>
-                            <a href="https://linkedin.com/in/pratikkumar21" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-gray-300 hover:text-white transition-colors group">
+                            <a href="https://linkedin.com/in/kumarpratik21" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-gray-300 hover:text-white transition-colors group">
                                 <div className="w-12 h-12 flex-shrink-0 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
                                     <Linkedin className="w-5 h-5" />
                                 </div>
