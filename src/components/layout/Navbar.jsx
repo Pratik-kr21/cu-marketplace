@@ -49,9 +49,7 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-                        <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-sm">
-                            <ShoppingBag className="w-4 h-4 text-white" />
-                        </div>
+                        <img src="/Logo.svg" alt="CU Market Logo" className="h-12 w-auto object-contain" />
                         <span className="font-bold text-gray-900 text-lg hidden sm:block">
                             CU <span className="text-brand-red">Market</span>
                         </span>

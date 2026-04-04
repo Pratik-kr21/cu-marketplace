@@ -9,7 +9,7 @@ import { useAuthStore } from '../store/authStore'
 export default function DeveloperContact() {
     const navigate = useNavigate()
     const { user } = useAuthStore()
-    const [form, setForm] = useState({ name: user?.full_name || '', message: '' })
+    const [form, setForm] = useState({ message: '' })
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState(null) // 'success' | 'error' | null
     const [errorMsg, setErrorMsg] = useState('')
@@ -21,7 +21,7 @@ export default function DeveloperContact() {
         try {
             await api.post('/api/contact', form)
             setStatus('success')
-            setForm({ name: '', message: '' })
+            setForm({ message: '' })
         } catch (err) {
             setStatus('error')
             setErrorMsg(err.message || 'Failed to send message.')
@@ -54,30 +54,30 @@ export default function DeveloperContact() {
                         
                         <div className="space-y-6">
                             <a href="mailto:kumarpratik21@outlook.com" className="flex items-center gap-4 text-gray-300 hover:text-white transition-colors group">
-                                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-brand-red transition-colors">
+                                <div className="w-12 h-12 flex-shrink-0 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-brand-red transition-colors">
                                     <Mail className="w-5 h-5" />
                                 </div>
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <p className="text-sm text-gray-500 font-medium">Email Me</p>
-                                    <p className="font-semibold">kumarpratik21@outlook.com</p>
+                                    <p className="font-semibold break-all">kumarpratik21@outlook.com</p>
                                 </div>
                             </a>
                             <a href="https://linkedin.com/in/pratikkumar21" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-gray-300 hover:text-white transition-colors group">
-                                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                                <div className="w-12 h-12 flex-shrink-0 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
                                     <Linkedin className="w-5 h-5" />
                                 </div>
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <p className="text-sm text-gray-500 font-medium">Connect on LinkedIn</p>
-                                    <p className="font-semibold">Let's connect</p>
+                                    <p className="font-semibold truncate">Let's connect</p>
                                 </div>
                             </a>
                             <a href="https://github.com/Pratik-kr21" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-gray-300 hover:text-white transition-colors group">
-                                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-gray-700 transition-colors">
+                                <div className="w-12 h-12 flex-shrink-0 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-gray-700 transition-colors">
                                     <Github className="w-5 h-5" />
                                 </div>
-                                <div>
+                                <div className="min-w-0 flex-1">
                                     <p className="text-sm text-gray-500 font-medium">Check my GitHub</p>
-                                    <p className="font-semibold">@Pratik-kr21</p>
+                                    <p className="font-semibold truncate">@Pratik-kr21</p>
                                 </div>
                             </a>
                         </div>
@@ -99,14 +99,6 @@ export default function DeveloperContact() {
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <Input 
-                                label="Student Name" 
-                                placeholder="John Doe" 
-                                value={form.name} 
-                                onChange={e => setForm({...form, name: e.target.value})} 
-                                required 
-                                disabled={!!user} // lock the input if they are authenticated
-                            />
                             <Textarea 
                                 label="Message" 
                                 placeholder="What's on your mind?" 

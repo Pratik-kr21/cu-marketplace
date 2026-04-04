@@ -6,7 +6,7 @@ const router = express.Router()
 
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { name, message } = req.body
+        const { message } = req.body
         
         if (!message) {
             return res.status(400).json({ message: 'Message is required.' })
@@ -34,8 +34,7 @@ router.post('/', authMiddleware, async (req, res) => {
             <div style="background:#f0f9ff; padding:15px; border-radius:8px; margin-bottom:20px; border-left: 4px solid #3b82f6;">
                 <p style="margin:0 0 8px 0"><strong>Student Name:</strong> ${req.user.full_name}</p>
                 <p style="margin:0 0 8px 0"><strong>Student UID:</strong> ${req.user.uid}</p>
-                <p style="margin:0 0 8px 0"><strong>Student Email:</strong> ${req.user.email}</p>
-                <p style="margin:0"><strong>Provided Name:</strong> ${name || req.user.full_name}</p>
+                <p style="margin:0"><strong>Student Email:</strong> ${req.user.email}</p>
             </div>
             <p><strong>Message:</strong></p>
             <p style="white-space: pre-wrap; background: #fdfdfd; padding: 15px; border-left: 4px solid #ef4444; color: #333;">${message}</p>

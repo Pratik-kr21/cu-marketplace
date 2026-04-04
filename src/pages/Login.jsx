@@ -40,9 +40,7 @@ export default function Login() {
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-8">
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="w-12 h-12 bg-brand-red rounded-xl flex items-center justify-center mb-3 shadow-md">
-                            <ShoppingBag className="w-6 h-6 text-white" />
-                        </div>
+                        <img src="/Logo.svg" alt="CU Market Logo" className="h-24 w-auto object-contain mb-4" />
                         <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
                         <p className="text-sm text-gray-500 mt-1">Sign in to your CU Marketplace account</p>
                     </div>
