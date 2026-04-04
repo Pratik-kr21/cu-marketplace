@@ -75,7 +75,7 @@ router.post('/', authMiddleware, async (req, res) => {
             buyer_id: req.user._id,
             seller_id,
             desired_quantity: desired_quantity || 1,
-            type: 'barter',
+            type: req.body.type || 'barter',
             offer_item_desc: offer_item_desc || 'Open trade offer',
             message: message || '',
             status: 'pending',

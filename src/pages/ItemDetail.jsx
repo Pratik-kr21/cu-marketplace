@@ -143,7 +143,8 @@ export default function ItemDetail() {
                     seller_id: item.seller_id || item.seller?.id,
                     offer_item_desc: offerDesc,
                     message: tradeMsg.trim(),
-                    desired_quantity: desiredQuantity || 1
+                    desired_quantity: desiredQuantity || 1,
+                    type: offerType
                 })
                 const buyerName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
                 sendPushToUser(
