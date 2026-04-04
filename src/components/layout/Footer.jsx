@@ -28,7 +28,7 @@ export default function Footer() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                     <div>
                         <div className="flex items-center gap-2 mb-3">
-                            <img src="/Logo.svg" alt="CU Market Logo" className="h-12 w-auto object-contain" />
+                            <img src="/Logo.svg" alt="CU Market Logo" className="h-12 w-auto object-contain rounded-xl" />
                             <span className="font-bold text-white text-base">CU Market</span>
                         </div>
                         <p className="text-sm text-gray-400 leading-relaxed max-w-xs mb-4">
