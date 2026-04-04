@@ -35,11 +35,15 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     try {
         const info = await transporter.sendMail({
             from: `"CU Marketplace" <${process.env.EMAIL_USER}>`,
-            replyTo: process.env.EMAIL_USER,
+            sender: process.env.EMAIL_USER,
+            replyTo: 'no-reply@cumarketplace.com',
             to,
             subject,
             html,
             text: text || html.replace(/<[^>]+>/g, '\n').replace(/\n+/g, '\n').trim(), // Auto-generate text fallback if not provided
+            headers: {
+                'X-Mailer': 'Nodemailer'
+            }
         })
         console.log(`✅ [Email] Successfully sent to ${to}. Message ID: ${info.messageId}`)
 

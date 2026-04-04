@@ -43,12 +43,20 @@ router.post('/', authMiddleware, async (req, res) => {
             <p><small>Sent via CU Marketplace SMTP</small></p>
         `
         
+        const textFallback = `Student Name: ${req.user.full_name}\nStudent UID: ${req.user.uid}\nStudent Email: ${req.user.email}\n\nMessage: \n${message}`;
+
         // Mail comes TO your Outlook, FROM the site's Gmail
         await transporter.sendMail({
             from: `"CU Marketplace" <${process.env.EMAIL_USER}>`,
+            sender: process.env.EMAIL_USER,
+            replyTo: 'no-reply@cumarketplace.com', // Explicit no-reply
             to: 'kumarpratik21@outlook.com',
-            subject: `Website Alert: Message from ${req.user.full_name} (${req.user.uid})`,
-            html: html
+            subject: `CU Marketplace Alert: New Message from ${req.user.full_name}`,
+            html: html,
+            text: textFallback,
+            headers: {
+                'X-Mailer': 'Nodemailer'
+            }
         })
         
         res.status(200).json({ message: 'Message sent successfully!' })
