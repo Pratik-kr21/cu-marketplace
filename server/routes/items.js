@@ -166,4 +166,22 @@ router.get('/my', authMiddleware, async (req, res) => {
     }
 })
 
+// Get items by specific user ID (auth necessary to see user's active offers optionally)
+router.get('/user/:userId', authMiddleware, async (req, res) => {
+    try {
+        const items = await Item.find({
+            $or: [{ userId: req.params.userId }, { seller_id: req.params.userId }],
+            is_available: true
+        })
+            .sort({ createdAt: -1 })
+            .select('title imageUrls images price is_barter_only is_free userId seller_id quantity')
+            .lean()
+
+        return res.json(items.map(itemToResponse))
+    } catch (err) {
+        console.error('[Items] User items error:', err)
+        return res.status(500).json({ error: err.message })
+    }
+})
+
 export default router

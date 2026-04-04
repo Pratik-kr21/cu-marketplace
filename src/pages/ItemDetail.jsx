@@ -21,7 +21,7 @@ export default function ItemDetail() {
     const [tradeModal, setTradeModal] = useState(false)
     const [tradeMsg, setTradeMsg] = useState('')
     const [myItems, setMyItems] = useState([])
-    const [selectedOffer, setSelectedOffer] = useState(null)
+    const [selectedOffers, setSelectedOffers] = useState([])
     const [offerType, setOfferType] = useState('item')
     const [cashAmount, setCashAmount] = useState('')
     const [desiredQuantity, setDesiredQuantity] = useState(1)
@@ -114,12 +114,8 @@ export default function ItemDetail() {
 
     const handleSendTrade = async () => {
         if (offerType === 'item') {
-            if (!item.is_free && !selectedOffer) {
-                setTradeError('Please select an item to offer in exchange.')
-                return
-            }
-            if (item.is_free && !selectedOffer && !tradeMsg.trim()) {
-                setTradeError('Please select an item to offer or write a message.')
+            if (!item.is_free && selectedOffers.length === 0) {
+                setTradeError('Please select at least one item to offer in exchange.')
                 return
             }
         }
@@ -127,15 +123,22 @@ export default function ItemDetail() {
             setTradeError('Please enter a cash offer amount.')
             return
         }
+        if (offerType === 'hybrid' && selectedOffers.length === 0 && !cashAmount) {
+            setTradeError('Please select items or enter cash for a hybrid offer.')
+            return
+        }
         setTradeSending(true)
         setTradeError('')
         try {
             if (isBackendConfigured) {
                 let offerDesc = 'Open trade offer'
-                if (offerType === 'cash' && cashAmount) {
+                if (offerType === 'cash') {
                     offerDesc = `Cash Offer: ₹${cashAmount}`
-                } else if (offerType === 'item' && selectedOffer) {
-                    offerDesc = `${selectedOffer.title} (${selectedOffer.is_free ? 'Free' : selectedOffer.is_barter_only ? 'Barter' : `₹${selectedOffer.price}`})`
+                } else if (offerType === 'item') {
+                    offerDesc = `Items: ${selectedOffers.map(o => o.title).join(', ')}`
+                } else if (offerType === 'hybrid') {
+                    const titles = selectedOffers.map(o => o.title).join(', ')
+                    offerDesc = `Hybrid: ${titles ? titles + ' ' : ''}${cashAmount ? '+ ₹' + cashAmount : ''}`
                 }
 
                 await api.post('/api/trades', {
@@ -144,13 +147,15 @@ export default function ItemDetail() {
                     offer_item_desc: offerDesc,
                     message: tradeMsg.trim(),
                     desired_quantity: desiredQuantity || 1,
-                    type: offerType
+                    type: offerType,
+                    proposed_items: offerType !== 'cash' ? selectedOffers.map(o => o.id) : [],
+                    proposed_cash: offerType !== 'item' ? Number(cashAmount) || 0 : 0
                 })
                 const buyerName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
                 sendPushToUser(
                     item.seller_id || item.seller?.id,
                     `New trade request for "${item.title}"`,
-                    `${buyerName} wants to trade: ${offerType === 'cash' ? `₹${cashAmount}` : selectedOffer?.title || 'Open offer'}`,
+                    `${buyerName} proposed an offer.`,
                     '/trades'
                 )
             }
@@ -158,7 +163,7 @@ export default function ItemDetail() {
             setTimeout(() => {
                 setTradeModal(false)
                 setTradeSuccess(false)
-                setSelectedOffer(null)
+                setSelectedOffers([])
                 setCashAmount('')
                 setDesiredQuantity(1)
                 setTradeMsg('')
@@ -321,7 +326,7 @@ export default function ItemDetail() {
                 </div>
             </div>
 
-            <Modal isOpen={tradeModal} onClose={() => { setTradeModal(false); setTradeSuccess(false); setTradeError(''); setSelectedOffer(null); setCashAmount(''); setDesiredQuantity(1); setTradeMsg('') }} title="Propose a Trade">
+            <Modal isOpen={tradeModal} onClose={() => { setTradeModal(false); setTradeSuccess(false); setTradeError(''); setSelectedOffers([]); setCashAmount(''); setDesiredQuantity(1); setTradeMsg('') }} title="Propose a Trade">
                 {tradeSuccess ? (
                     <div className="py-8 text-center">
                         <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -366,24 +371,30 @@ export default function ItemDetail() {
                             </div>
                         )}
 
-                        <div className="flex gap-2 mb-2 p-1 bg-gray-100 rounded-lg">
+                        <div className="flex gap-2 mb-4 p-1 bg-gray-100 rounded-lg">
                             <button
                                 onClick={() => setOfferType('item')}
                                 className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${offerType === 'item' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500'}`}
                             >
-                                Barter Item
+                                Barter Items
                             </button>
                             <button
                                 onClick={() => setOfferType('cash')}
                                 className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${offerType === 'cash' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500'}`}
                             >
-                                Cash Offer
+                                Cash
+                            </button>
+                            <button
+                                onClick={() => setOfferType('hybrid')}
+                                className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${offerType === 'hybrid' ? 'bg-white shadow-sm text-gray-900 border border-gray-200' : 'text-gray-500'}`}
+                            >
+                                Hybrid
                             </button>
                         </div>
 
-                        {offerType === 'item' ? (
-                            <div>
-                                <label className="text-sm font-medium text-gray-700 block mb-2">Select your item to offer</label>
+                        {(offerType === 'item' || offerType === 'hybrid') && (
+                            <div className="mb-4">
+                                <label className="text-sm font-medium text-gray-700 block mb-2">Select items to offer (Multi-select)</label>
                                 {loadingMyItems ? (
                                     <div className="flex justify-center py-6">
                                         <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
@@ -398,34 +409,56 @@ export default function ItemDetail() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                                        {myItems.map(mi => (
-                                            <button
-                                                key={mi.id}
-                                                onClick={() => setSelectedOffer(selectedOffer?.id === mi.id ? null : mi)}
-                                                className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-left transition-colors ${selectedOffer?.id === mi.id
-                                                    ? 'border-brand-red bg-brand-subtle'
-                                                    : 'border-gray-200 hover:border-gray-300'}`}
-                                            >
-                                                <div className="w-10 h-10 rounded bg-gray-100 flex-shrink-0 overflow-hidden">
-                                                    {mi.images?.[0]
-                                                        ? <LazyImage src={mi.images[0]} alt="" className="w-full h-full" />
-                                                        : <div className="w-full h-full bg-gray-200" />}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-semibold text-gray-900 truncate">{mi.title}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {mi.is_free ? 'Free' : mi.is_barter_only ? 'Barter' : `₹${mi.price}`}
-                                                    </p>
-                                                </div>
-                                            </button>
-                                        ))}
+                                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                                        {myItems.map(mi => {
+                                            const isSelected = selectedOffers.some(o => o.id === mi.id)
+                                            return (
+                                                <button
+                                                    key={mi.id}
+                                                    onClick={() => {
+                                                        if (isSelected) setSelectedOffers(selectedOffers.filter(o => o.id !== mi.id))
+                                                        else setSelectedOffers([...selectedOffers, mi])
+                                                    }}
+                                                    className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left transition-colors ${isSelected
+                                                        ? 'border-brand-red bg-brand-subtle'
+                                                        : 'border-gray-200 hover:border-gray-300'}`}
+                                                >
+                                                    <div className="w-10 h-10 rounded bg-white border border-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
+                                                        {mi.images?.[0]
+                                                            ? <LazyImage src={mi.images[0]} alt="" className="w-full h-full" />
+                                                            : <div className="w-full h-full bg-gray-100" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold text-gray-900 truncate">{mi.title}</p>
+                                                        <p className="text-[10px] uppercase font-bold text-gray-400">
+                                                            {mi.is_free ? 'Free' : mi.is_barter_only ? 'Barter' : `₹${mi.price}`}
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </div>
-                        ) : null}
+                        )}
 
-                        <div>
+                        {(offerType === 'cash' || offerType === 'hybrid') && (
+                            <div className="mb-4">
+                                <label className="text-sm font-medium text-gray-700 block mb-2">{offerType === 'hybrid' ? 'Extra Cash Offer (Optional)' : 'Cash Offer'}</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                                    <input 
+                                       type="number" 
+                                       value={cashAmount} 
+                                       onChange={e => setCashAmount(e.target.value)}
+                                       className="w-full border border-gray-200 rounded-lg p-2.5 pl-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                                       placeholder="Enter amount"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mb-4">
                             <label className="text-sm font-medium text-gray-700 block mb-1">Message to seller</label>
                             <textarea
                                 value={tradeMsg}

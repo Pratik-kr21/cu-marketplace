@@ -8,6 +8,9 @@ const tradeSchema = new mongoose.Schema({
     type: { type: String, default: 'barter' },
     offer_item_desc: { type: String, default: '' },
     message: { type: String, default: '' },
+    proposed_items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
+    proposed_cash: { type: Number, default: 0 },
+    action_required_from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     status: { type: String, enum: ['pending', 'accepted', 'declined', 'cancelled', 'completed'], default: 'pending' },
 }, { timestamps: true })
 

@@ -1,7 +1,9 @@
-import { ArrowRightLeft, Clock, CheckCircle, XCircle, RefreshCw, Star } from 'lucide-react'
+import { ArrowRightLeft, Clock, CheckCircle, XCircle, RefreshCw, Star, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { api, isBackendConfigured } from '../lib/api'
 import Button from '../components/ui/Button'
+import Modal from '../components/ui/Modal'
+import LazyImage from '../components/ui/LazyImage'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 
@@ -111,6 +113,126 @@ function RateSellerModal({ trade, onClose, onSubmitted }) {
     )
 }
 
+function CounterOfferModal({ trade, currentUser, onClose, onSubmitted }) {
+    const [theirItems, setTheirItems] = useState([])
+    const [loadingItems, setLoadingItems] = useState(true)
+    const [selectedOffers, setSelectedOffers] = useState(trade.proposed_items || [])
+    const [cashAmount, setCashAmount] = useState(trade.proposed_cash || '')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
+
+    const targetUserId = trade.seller_id === currentUser.id ? trade.buyer_id : trade.seller_id
+
+    useEffect(() => {
+        api.get(`/api/items/user/${targetUserId}`).then(data => {
+            setTheirItems(data || [])
+            setLoadingItems(false)
+        })
+    }, [targetUserId])
+
+    const handleSubmit = async () => {
+        if (selectedOffers.length === 0 && !cashAmount) {
+             return setError('Please select items or specify a cash amount.')
+        }
+        setLoading(true)
+        setError('')
+        try {
+            const titles = selectedOffers.map(o => o.title).join(', ')
+            const offerDesc = `Counter: ${titles ? titles + ' ' : ''}${cashAmount ? '+ ₹' + cashAmount : ''}`
+            
+             await api.patch(`/api/trades/${trade.id}`, {
+                 status: 'counter_offer',
+                 proposed_items: selectedOffers.map(o => o.id),
+                 proposed_cash: Number(cashAmount) || 0,
+                 offer_item_desc: offerDesc
+             })
+             onSubmitted()
+             onClose()
+        } catch(err) {
+             setError(err.message || 'Failed to send counter offer')
+        } finally {
+             setLoading(false)
+        }
+    }
+
+    return (
+        <Modal isOpen={true} onClose={onClose} title="Propose Counter Offer">
+            <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                    Propose a new deal by selecting items from their inventory or requesting extra cash.
+                </p>
+                
+                <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-2">Select items (Multi-select)</label>
+                    {loadingItems ? (
+                        <div className="flex justify-center py-6">
+                            <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                        </div>
+                    ) : theirItems.length === 0 ? (
+                        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-4 text-center">
+                            <p className="text-sm text-gray-500">They have no active listings left to request.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                            {theirItems.map(mi => {
+                                const isSelected = selectedOffers.some(o => o.id === mi.id)
+                                return (
+                                    <button
+                                        key={mi.id}
+                                        onClick={() => {
+                                            if (isSelected) setSelectedOffers(selectedOffers.filter(o => o.id !== mi.id))
+                                            else setSelectedOffers([...selectedOffers, mi])
+                                        }}
+                                        className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left transition-colors ${isSelected
+                                            ? 'border-brand-red bg-brand-subtle'
+                                            : 'border-gray-200 hover:border-gray-300'}`}
+                                    >
+                                        <div className="w-10 h-10 rounded bg-white border border-gray-200 flex-shrink-0 overflow-hidden shadow-sm">
+                                            {mi.images?.[0]
+                                                ? <LazyImage src={mi.images[0]} alt="" className="w-full h-full" />
+                                                : <div className="w-full h-full bg-gray-100" />}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">
+                                                {mi.is_free ? 'Free' : mi.is_barter_only ? 'Barter' : `₹${mi.price}`}
+                                            </p>
+                                            <p className="text-xs font-semibold text-gray-900 truncate leading-none">{mi.title}</p>
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-2">Required Cash Amount</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                        <input 
+                           type="number" 
+                           value={cashAmount} 
+                           onChange={e => setCashAmount(e.target.value)}
+                           className="w-full border border-gray-200 rounded-lg p-2.5 pl-8 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                           placeholder="Enter amount"
+                        />
+                    </div>
+                </div>
+
+                {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">⚠️ {error}</p>}
+                
+                <div className="flex gap-3 pt-2">
+                    <Button variant="secondary" className="flex-1" onClick={onClose}>Cancel</Button>
+                    <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRightLeft className="w-4 h-4" />}
+                        {loading ? 'Sending…' : 'Send Counter'}
+                    </Button>
+                </div>
+            </div>
+        </Modal>
+    )
+}
+
 function timeAgo(dateStr) {
     if (!dateStr) return ''
     const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
@@ -128,6 +250,7 @@ export default function TradeDashboard() {
     const [actionLoading, setActionLoading] = useState(null)
     const [error, setError] = useState('')
     const [ratingTrade, setRatingTrade] = useState(null)   // trade being rated
+    const [counteringTrade, setCounteringTrade] = useState(null) // trade being countered
     const [ratedTradeIds, setRatedTradeIds] = useState({}) // { tradeId: score }
 
     const fetchTrades = useCallback(async () => {
@@ -205,6 +328,14 @@ export default function TradeDashboard() {
                     trade={ratingTrade}
                     onClose={() => setRatingTrade(null)}
                     onSubmitted={(tradeId, score) => setRatedTradeIds(prev => ({ ...prev, [tradeId]: score }))}
+                />
+            )}
+            {counteringTrade && (
+                <CounterOfferModal
+                    trade={counteringTrade}
+                    currentUser={user}
+                    onClose={() => setCounteringTrade(null)}
+                    onSubmitted={() => { setTab(tab); fetchTrades() }}
                 />
             )}
             <div className="flex items-center justify-between mb-6">
@@ -286,60 +417,84 @@ export default function TradeDashboard() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4 mb-3">
+                                <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4 mb-3 border border-gray-100">
                                     <div className="flex-1 text-center">
-                                        <p className="text-xs text-gray-500 mb-1">{isIncoming ? 'They offer' : 'You offer'}</p>
-                                        <p className="text-sm font-semibold text-gray-900 leading-tight">
-                                            {trade.offer_item_desc || 'Open trade offer'}
-                                        </p>
+                                        <p className="text-xs text-gray-500 mb-2">{isIncoming ? 'They offer' : 'You offer'}</p>
+                                        <div className="text-sm font-semibold text-gray-900 leading-tight">
+                                           {trade.proposed_cash > 0 && <span className="text-green-600 block mb-1">₹{trade.proposed_cash.toLocaleString('en-IN')} Cash</span>}
+                                           {trade.proposed_items?.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1 justify-center">
+                                                    {trade.proposed_items.map(pi => (
+                                                        <span key={pi.id} className="bg-white border border-gray-200 text-[10px] px-2 py-0.5 rounded-full truncate max-w-full">
+                                                            {pi.title}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                           ) : (
+                                              trade.proposed_cash === 0 && <span>{trade.offer_item_desc || 'Open trade offer'}</span>
+                                           )}
+                                        </div>
                                     </div>
                                     <div className="w-8 h-8 bg-brand-red/10 rounded-full flex items-center justify-center flex-shrink-0">
                                         <ArrowRightLeft className="w-4 h-4 text-brand-red" />
                                     </div>
                                     <div className="flex-1 text-center">
-                                        <p className="text-xs text-gray-500 mb-1">{isIncoming ? 'They want' : 'You want'}</p>
+                                        <p className="text-xs text-gray-500 mb-2">{isIncoming ? 'They want' : 'You want'}</p>
                                         <p className="text-sm font-semibold text-gray-900 leading-tight">
                                             {trade.item?.title || '—'} {trade.desired_quantity > 1 ? `(Qty: ${trade.desired_quantity})` : ''}
                                         </p>
                                         {trade.item?.images?.[0] && (
-                                            <img src={trade.item.images[0]} alt="" className="w-10 h-10 object-cover rounded mx-auto mt-1" />
+                                            <img src={trade.item.images[0]} alt="" className="w-10 h-10 object-cover rounded mx-auto mt-1.5 border border-gray-200" />
                                         )}
                                     </div>
                                 </div>
 
                                 {trade.message && (
-                                    <p className="text-sm text-gray-600 italic mb-4 bg-gray-50 rounded-lg px-3 py-2">
+                                    <p className="text-sm text-gray-600 italic mb-4 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
                                         "{trade.message}"
                                     </p>
                                 )}
 
-                                {isIncoming && trade.status === 'pending' && (
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm" className="flex-1"
-                                            loading={actionLoading === trade.id + 'accepted'}
-                                            onClick={() => handleAction(trade.id, 'accepted')}
-                                        >
-                                            <CheckCircle className="w-4 h-4" /> Accept
-                                        </Button>
-                                        <Button
-                                            size="sm" variant="secondary" className="flex-1"
-                                            loading={actionLoading === trade.id + 'declined'}
-                                            onClick={() => handleAction(trade.id, 'declined')}
-                                        >
-                                            <XCircle className="w-4 h-4" /> Decline
-                                        </Button>
-                                    </div>
-                                )}
-
-                                {!isIncoming && trade.status === 'pending' && (
-                                    <Button
-                                        size="sm" variant="secondary"
-                                        loading={actionLoading === trade.id + 'cancelled'}
-                                        onClick={() => handleAction(trade.id, 'cancelled')}
-                                    >
-                                        Cancel Request
-                                    </Button>
+                                {trade.status === 'pending' && (
+                                    (trade.action_required_from === user?.id || (!trade.action_required_from && isIncoming)) ? (
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm" className="flex-1 bg-green-600 hover:bg-green-700 border-green-600 focus:ring-green-600"
+                                                    loading={actionLoading === trade.id + 'accepted'}
+                                                    onClick={() => handleAction(trade.id, 'accepted')}
+                                                >
+                                                    <CheckCircle className="w-4 h-4 text-white" /> Accept Terms
+                                                </Button>
+                                                <Button
+                                                    size="sm" variant="secondary" className="flex-1"
+                                                    loading={actionLoading === trade.id + 'declined'}
+                                                    onClick={() => handleAction(trade.id, 'declined')}
+                                                >
+                                                    <XCircle className="w-4 h-4" /> Decline
+                                                </Button>
+                                            </div>
+                                            <Button
+                                                size="sm" variant="outline" className="w-full"
+                                                onClick={() => setCounteringTrade(trade)}
+                                            >
+                                                <ArrowRightLeft className="w-4 h-4" /> Propose Counter Offer
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-2 text-center text-sm">
+                                            <div className="bg-blue-50 text-blue-700 font-medium py-3 rounded-lg border border-blue-100 flex justify-center items-center gap-2">
+                                                <Clock className="w-4 h-4" /> Waiting for {otherPerson.split(' ')[0]} to respond...
+                                            </div>
+                                            <Button
+                                                size="sm" variant="secondary"
+                                                loading={actionLoading === trade.id + 'cancelled'}
+                                                onClick={() => handleAction(trade.id, 'cancelled')}
+                                            >
+                                                Cancel Trade
+                                            </Button>
+                                        </div>
+                                    )
                                 )}
 
                                 {trade.status === 'accepted' && (
