@@ -56,8 +56,13 @@ export default function Footer() {
                         </ul>
                     </div>
                 </div>
-                <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <p className="text-xs text-gray-500">© 2026 CU Marketplace. Made with <Heart className="w-3 h-3 inline text-brand-red" /> for CU students.</p>
+                <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-xs text-gray-400">
+                        © {new Date().getFullYear()} CU Market. Made with <Heart className="w-3 h-3 inline text-brand-red" /> for CU students.
+                    </p>
+                    <p className="text-xs text-gray-400 text-center sm:text-right">
+                        Designed &amp; Developed by <a href="https://linkedin.com/in/pratikkumar21" target="_blank" rel="noreferrer" className="text-white font-semibold hover:text-blue-400 transition-colors">Pratik Kumar</a> · All Rights Reserved. Unauthorized use or claiming of this project is strictly prohibited.
+                    </p>
                 </div>
             </div>
         </footer>

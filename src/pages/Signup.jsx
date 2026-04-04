@@ -72,7 +72,7 @@ export default function Signup() {
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-8">
                     <div className="flex flex-col items-center mb-7">
                         <img src="/Logo.svg" alt="CU Market Logo" className="h-24 w-auto object-contain mb-4 rounded-3xl shadow-md" />
-                        <h1 className="text-2xl font-bold text-gray-900">Join CU Marketplace</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Join CU Market</h1>
                         <p className="text-sm text-gray-500 mt-1">Exclusively for Chandigarh University students</p>
                     </div>
 

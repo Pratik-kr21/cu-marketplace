@@ -83,7 +83,7 @@ export default function InstallPWA() {
                 <Download className="w-6 h-6" />
             </div>
             <div className="flex-1">
-                <h3 className="text-gray-900 font-bold text-sm mb-1">Install CU Marketplace App</h3>
+                <h3 className="text-gray-900 font-bold text-sm mb-1">Install CU Market App</h3>
                 <p className="text-gray-500 text-xs leading-relaxed mb-3">Install our application on your home screen for quick and easy access when you're on the go.</p>
                 <div className="flex gap-2">
                     <Button size="sm" className="flex-1 py-1.5 text-xs" onClick={handleInstallClick}>Install App</Button>

@@ -49,7 +49,7 @@ export default function DeveloperContact() {
                     <div>
                         <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
                         <p className="text-gray-400 mb-8 leading-relaxed">
-                            I'm Pratik, the developer behind CU Marketplace. I'm actively improving the platform and would love to hear your thoughts!
+                            I'm Pratik, the developer behind CU Market. I'm actively improving the platform and would love to hear your thoughts!
                         </p>
                         
                         <div className="space-y-6">

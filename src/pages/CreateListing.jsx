@@ -183,7 +183,7 @@ export default function CreateListing() {
                 <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Listing Posted!</h2>
-            <p className="text-gray-500">Your item is now live on CU Marketplace. Redirecting...</p>
+            <p className="text-gray-500">Your item is now live on CU Market. Redirecting...</p>
         </div>
     )
 

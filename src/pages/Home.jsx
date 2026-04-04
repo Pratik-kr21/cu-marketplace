@@ -109,7 +109,7 @@ export default function Home() {
             {/* Features */}
             <section className="bg-gray-900 py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <h2 className="text-2xl font-bold text-white text-center mb-10">Why CU Marketplace?</h2>
+                    <h2 className="text-2xl font-bold text-white text-center mb-10">Why CU Market?</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {features.map(({ icon: Icon, title, desc }) => (
                             <div key={title} className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-brand-red/50 transition-colors">
