@@ -23,54 +23,26 @@ export function validateImageFile(file) {
     return null
 }
 
-export function compressImage(file) {
-    return new Promise((resolve, reject) => {
-        const img = new Image()
-        const objectUrl = URL.createObjectURL(file)
-        img.onload = () => {
-            let { width, height } = img
-            if (width > MAX_WIDTH) {
-                height = Math.round(height * MAX_WIDTH / width)
-                width = MAX_WIDTH
-            }
-            if (height > MAX_WIDTH) {
-                width = Math.round(width * MAX_WIDTH / height)
-                height = MAX_WIDTH
-            }
-            const canvas = document.createElement('canvas')
-            canvas.width = width
-            canvas.height = height
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0, width, height)
-            URL.revokeObjectURL(objectUrl)
-            canvas.toBlob(
-                (blob) => {
-                    if (!blob) { reject(new Error('Failed to compress image')); return }
-                    if (blob.size > MAX_SIZE_BYTES) {
-                        canvas.toBlob(
-                            (smallerBlob) => {
-                                if (!smallerBlob) { reject(new Error('Failed to compress image')); return }
-                                if (smallerBlob.size > REJECT_SIZE_BYTES) {
-                                    reject(new Error(`Image too large after compression (${Math.round(smallerBlob.size / 1024)}KB). Please use a smaller image.`))
-                                    return
-                                }
-                                resolve(smallerBlob)
-                            },
-                            'image/webp', 0.5
-                        )
-                        return
-                    }
-                    resolve(blob)
-                },
-                'image/webp', WEBP_QUALITY
-            )
+import imageCompression from 'browser-image-compression'
+
+export async function compressImage(file) {
+    const options = {
+        maxSizeMB: 0.4, // Max size around 400KB to stay safely under 500KB reject size
+        maxWidthOrHeight: MAX_WIDTH,
+        useWebWorker: true,
+        fileType: 'image/webp',
+        initialQuality: WEBP_QUALITY,
+    }
+
+    try {
+        const compressedBlob = await imageCompression(file, options)
+        if (compressedBlob.size > REJECT_SIZE_BYTES) {
+            throw new Error(`Image too large after compression (${Math.round(compressedBlob.size / 1024)}KB). Please use a smaller image.`)
         }
-        img.onerror = () => {
-            URL.revokeObjectURL(objectUrl)
-            reject(new Error('Failed to load image'))
-        }
-        img.src = objectUrl
-    })
+        return compressedBlob
+    } catch (error) {
+        throw new Error(error.message || 'Failed to compress image')
+    }
 }
 
 /**
