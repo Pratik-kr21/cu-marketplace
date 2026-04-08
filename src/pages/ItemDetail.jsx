@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useItemStore } from '../store/itemStore'
 import { useAuthStore } from '../store/authStore'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, MapPin, Star, ArrowRightLeft, MessageCircle, ShieldCheck, Share2, CheckCircle, Loader2, Edit2 } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, ArrowRightLeft, MessageCircle, ShieldCheck, Share2, CheckCircle, Loader2, Edit2, Heart } from 'lucide-react'
 import Badge, { ConditionBadge } from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
 import Button from '../components/ui/Button'
@@ -16,7 +16,7 @@ export default function ItemDetail() {
     const { id } = useParams()
     const navigate = useNavigate()
     const { items, fetchItems, loading, updateItem } = useItemStore()
-    const { user } = useAuthStore()
+    const { user, profile, toggleSavedItem } = useAuthStore()
     const [activeImg, setActiveImg] = useState(0)
     const [tradeModal, setTradeModal] = useState(false)
     const [tradeMsg, setTradeMsg] = useState('')
@@ -297,32 +297,44 @@ export default function ItemDetail() {
                         </div>
                     )}
 
-                    <button
-                        onClick={async () => {
-                            if (navigator.share) {
-                                try {
-                                    await navigator.share({
-                                        title: item.title,
-                                        text: `Check out ${item.title} on CU Market!`,
-                                        url: window.location.href,
-                                    })
-                                } catch (err) {
-                                    if (err.name !== 'AbortError') {
-                                        navigator.clipboard.writeText(window.location.href)
-                                        setShareCopied(true)
-                                        setTimeout(() => setShareCopied(false), 2000)
+                    <div className="flex items-center gap-6 mt-6">
+                        <button
+                            onClick={async () => {
+                                if (navigator.share) {
+                                    try {
+                                        await navigator.share({
+                                            title: item.title,
+                                            text: `Check out ${item.title} on CU Market!`,
+                                            url: window.location.href,
+                                        })
+                                    } catch (err) {
+                                        if (err.name !== 'AbortError') {
+                                            navigator.clipboard.writeText(window.location.href)
+                                            setShareCopied(true)
+                                            setTimeout(() => setShareCopied(false), 2000)
+                                        }
                                     }
+                                } else {
+                                    navigator.clipboard.writeText(window.location.href)
+                                    setShareCopied(true)
+                                    setTimeout(() => setShareCopied(false), 2000)
                                 }
-                            } else {
-                                navigator.clipboard.writeText(window.location.href)
-                                setShareCopied(true)
-                                setTimeout(() => setShareCopied(false), 2000)
-                            }
-                        }}
-                        className={`flex items-center gap-2 text-sm transition-colors ${shareCopied ? 'text-green-600' : 'text-gray-400 hover:text-gray-700'}`}>
-                        {shareCopied ? <CheckCircle className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                        {shareCopied ? 'Link Copied!' : 'Share listing'}
-                    </button>
+                            }}
+                            className={`flex items-center gap-2 text-sm transition-colors ${shareCopied ? 'text-green-600' : 'text-gray-400 hover:text-gray-700'}`}>
+                            {shareCopied ? <CheckCircle className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                            {shareCopied ? 'Link Copied!' : 'Share'}
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                if (!user) { navigate('/login'); return; }
+                                toggleSavedItem(item.id);
+                            }}
+                            className={`flex items-center gap-2 text-sm transition-colors ${profile?.saved_items?.includes(item.id) ? 'text-brand-red' : 'text-gray-400 hover:text-gray-700'}`}>
+                            <Heart className={`w-4 h-4 ${profile?.saved_items?.includes(item.id) ? 'fill-brand-red' : ''}`} />
+                            {profile?.saved_items?.includes(item.id) ? 'Saved' : 'Save'}
+                        </button>
+                    </div>
                 </div>
             </div>
 

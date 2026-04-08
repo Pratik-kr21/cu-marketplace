@@ -5,6 +5,7 @@ import { deleteImageFromCloudinary } from '../utils/cloudinary.js'
 import Trade from '../models/Trade.js'
 import Conversation from '../models/Conversation.js'
 import Message from '../models/Message.js'
+import User from '../models/User.js'
 
 const router = Router()
 
@@ -162,6 +163,70 @@ router.get('/my', authMiddleware, async (req, res) => {
         return res.json(items.map(itemToResponse))
     } catch (err) {
         console.error('[Items] My items error:', err)
+        return res.status(500).json({ error: err.message })
+    }
+})
+
+// Get saved items (auth)
+router.get('/saved', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate({
+            path: 'saved_items',
+            match: { is_available: true }, // Optional: only show available items
+            populate: {
+                path: 'userId', // also populate seller details
+                select: req.user?.email === '24bcs10403@cuchd.in' ? 'full_name avatar_url department hostel email uid' : 'full_name avatar_url'
+            }
+        }).lean()
+
+        if (!user) return res.status(404).json({ error: 'User not found' })
+
+        // filter out any nulls if an item got deleted entirely
+        const savedItems = (user.saved_items || []).filter(item => item !== null)
+        
+        return res.json(savedItems.map(itemToResponse))
+    } catch (err) {
+        console.error('[Items] Saved items error:', err)
+        return res.status(500).json({ error: err.message })
+    }
+})
+
+// Save item (auth)
+router.post('/:id/save', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+        if (!user) return res.status(404).json({ error: 'User not found' })
+
+        if (!user.saved_items) {
+            user.saved_items = []
+        }
+
+        if (!user.saved_items.includes(req.params.id)) {
+            user.saved_items.push(req.params.id)
+            await user.save()
+        }
+
+        return res.status(200).json({ saved_items: user.saved_items })
+    } catch (err) {
+        console.error('[Items] Save error:', err)
+        return res.status(500).json({ error: err.message })
+    }
+})
+
+// Unsave item (auth)
+router.delete('/:id/save', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+        if (!user) return res.status(404).json({ error: 'User not found' })
+
+        if (user.saved_items) {
+            user.saved_items = user.saved_items.filter(id => id.toString() !== req.params.id)
+            await user.save()
+        }
+
+        return res.status(200).json({ saved_items: user.saved_items })
+    } catch (err) {
+        console.error('[Items] Unsave error:', err)
         return res.status(500).json({ error: err.message })
     }
 })

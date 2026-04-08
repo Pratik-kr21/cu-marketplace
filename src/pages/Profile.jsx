@@ -2,11 +2,12 @@ import { useAuthStore } from '../store/authStore'
 import { useItemStore } from '../store/itemStore'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Package, Plus, ArrowRightLeft, Star, Trash2, Tag, MapPin, AlertTriangle, X } from 'lucide-react'
+import { Package, Plus, ArrowRightLeft, Star, Trash2, Tag, MapPin, AlertTriangle, X, Heart } from 'lucide-react'
 import Avatar from '../components/ui/Avatar'
 import Button from '../components/ui/Button'
 import LazyImage from '../components/ui/LazyImage'
 import { ConditionBadge } from '../components/ui/Badge'
+import ItemCard from '../components/marketplace/ItemCard'
 
 // Inline mini listing card with delete button
 function MyListingCard({ item, onDelete }) {
@@ -19,7 +20,7 @@ function MyListingCard({ item, onDelete }) {
             : `₹${item.price?.toLocaleString('en-IN')}`
 
     return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all group">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all group relative">
             {/* Image */}
             <div className="relative aspect-video bg-gray-50 overflow-hidden">
                 {img ? (
@@ -31,21 +32,21 @@ function MyListingCard({ item, onDelete }) {
                 )}
                 {/* Delete button overlaid on image */}
                 <button
-                    onClick={() => onDelete(item)}
-                    title="Delete this listing"
-                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(item); }}
+                    title="Remove"
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 z-10"
                 >
                     <Trash2 className="w-3.5 h-3.5" />
                 </button>
                 {item.is_barter_only && (
-                    <span className="absolute top-2 left-2 flex items-center gap-1 bg-gray-900 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                    <span className="absolute top-2 left-2 flex items-center gap-1 bg-gray-900 text-white text-xs font-semibold px-2 py-0.5 rounded-full z-10">
                         <ArrowRightLeft className="w-3 h-3" /> Barter
                     </span>
                 )}
             </div>
 
             {/* Body */}
-            <div className="p-3 space-y-1.5">
+            <Link to={`/items/${item.id}`} className="block p-3 space-y-1.5">
                 <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">{item.title}</p>
                 <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-brand-red">{priceLabel}</p>
@@ -56,7 +57,7 @@ function MyListingCard({ item, onDelete }) {
                         <MapPin className="w-3 h-3" />{item.hostel_area}
                     </p>
                 )}
-            </div>
+            </Link>
         </div>
     )
 }
@@ -70,15 +71,12 @@ function DeleteModal({ item, onConfirm, onCancel, loading }) {
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertTriangle className="w-6 h-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 text-center mb-1">Delete Listing?</h3>
+                <h3 className="text-lg font-bold text-gray-900 text-center mb-1">Remove Listing?</h3>
                 <p className="text-sm text-gray-500 text-center mb-1">
-                    Are you sure you want to delete:
+                    Are you sure you want to remove:
                 </p>
                 <p className="text-sm font-semibold text-gray-800 text-center mb-6 line-clamp-2">
                     "{item.title}"
-                </p>
-                <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 text-center mb-5">
-                    This action cannot be undone.
                 </p>
                 <div className="flex gap-3">
                     <button
@@ -98,7 +96,7 @@ function DeleteModal({ item, onConfirm, onCancel, loading }) {
                         ) : (
                             <Trash2 className="w-4 h-4" />
                         )}
-                        {loading ? 'Deleting…' : 'Yes, Delete'}
+                        {loading ? 'Removing…' : 'Yes, Remove'}
                     </button>
                 </div>
             </div>
@@ -108,12 +106,29 @@ function DeleteModal({ item, onConfirm, onCancel, loading }) {
 
 export default function Profile() {
     const { profile, user } = useAuthStore()
-    const { items, fetchItems, deleteItem } = useItemStore()
+    const { items, fetchItems, deleteItem, fetchSavedItems } = useItemStore()
+    
     const [pendingDelete, setPendingDelete] = useState(null)   // item to confirm delete
     const [deleteLoading, setDeleteLoading] = useState(false)
     const [deleteError, setDeleteError] = useState('')
+    
+    const [activeTab, setActiveTab] = useState('listings')
+    const [savedItems, setSavedItems] = useState([])
+    const [loadingSaved, setLoadingSaved] = useState(false)
 
-    useEffect(() => { fetchItems() }, [])
+    useEffect(() => { 
+        fetchItems() 
+    }, [fetchItems])
+
+    useEffect(() => {
+        if (activeTab === 'saved') {
+            setLoadingSaved(true)
+            fetchSavedItems().then(data => {
+                setSavedItems(data)
+                setLoadingSaved(false)
+            }).catch(() => setLoadingSaved(false))
+        }
+    }, [activeTab, fetchSavedItems, profile?.saved_items])
 
     const myItems = items.filter(i => i.seller_id === user?.id || i.seller?.id === user?.id)
 
@@ -207,43 +222,88 @@ export default function Profile() {
                 </div>
             </div>
 
-            {/* My Listings */}
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900">
-                    My Listings
-                    {myItems.length > 0 && (
-                        <span className="ml-2 text-sm font-normal text-gray-400">({myItems.length})</span>
-                    )}
-                </h2>
-                <Link to="/create-listing">
-                    <Button size="sm"><Plus className="w-4 h-4" /> Add Listing</Button>
-                </Link>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 gap-6 mt-8 mb-6">
+                <button
+                    onClick={() => setActiveTab('listings')}
+                    className={`pb-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'listings' ? 'text-brand-red border-brand-red' : 'text-gray-500 border-transparent hover:border-gray-300'}`}
+                >
+                    My Listings {myItems.length > 0 && <span className="ml-1 text-gray-400">({myItems.length})</span>}
+                </button>
+                <button
+                    onClick={() => setActiveTab('saved')}
+                    className={`pb-3 font-semibold text-sm transition-colors border-b-2 flex items-center gap-1.5 ${activeTab === 'saved' ? 'text-brand-red border-brand-red' : 'text-gray-500 border-transparent hover:border-gray-300'}`}
+                >
+                    Saved Items {savedItems.length > 0 && <span className="ml-1 text-gray-400">({savedItems.length})</span>}
+                </button>
             </div>
 
-            {deleteError && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 flex items-center justify-between">
-                    <span>⚠️ {deleteError}</span>
-                    <button onClick={() => setDeleteError('')}><X className="w-4 h-4" /></button>
-                </div>
-            )}
+            {/* Content area */}
+            {activeTab === 'listings' ? (
+                <>
+                    <div className="flex justify-end mb-4">
+                        <Link to="/create-listing">
+                            <Button size="sm"><Plus className="w-4 h-4" /> Add Listing</Button>
+                        </Link>
+                    </div>
 
-            {myItems.length === 0 ? (
-                <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center">
-                    <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <h3 className="font-semibold text-gray-700 mb-1">No listings yet</h3>
-                    <p className="text-sm text-gray-400 mb-4">List your first item and start trading!</p>
-                    <Link to="/create-listing"><Button>Post Your First Item</Button></Link>
-                </div>
+                    {deleteError && (
+                        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 flex items-center justify-between">
+                            <span>⚠️ {deleteError}</span>
+                            <button onClick={() => setDeleteError('')}><X className="w-4 h-4" /></button>
+                        </div>
+                    )}
+
+                    {myItems.length === 0 ? (
+                        <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center">
+                            <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                            <h3 className="font-semibold text-gray-700 mb-1">No listings yet</h3>
+                            <p className="text-sm text-gray-400 mb-4">List your first item and start trading!</p>
+                            <Link to="/create-listing"><Button>Post Your First Item</Button></Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {myItems.map(item => (
+                                <MyListingCard
+                                    key={item.id}
+                                    item={item}
+                                    onDelete={(item) => { setPendingDelete(item); setDeleteError('') }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {myItems.map(item => (
-                        <MyListingCard
-                            key={item.id}
-                            item={item}
-                            onDelete={(item) => { setPendingDelete(item); setDeleteError('') }}
-                        />
-                    ))}
-                </div>
+                <>
+                    {loadingSaved ? (
+                        <div className="flex justify-center p-12">
+                            <span className="w-8 h-8 border-4 border-brand-light border-t-brand-red rounded-full animate-spin" />
+                        </div>
+                    ) : savedItems.length === 0 ? (
+                        <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center">
+                            <Heart className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                            <h3 className="font-semibold text-gray-700 mb-1">No saved items</h3>
+                            <p className="text-sm text-gray-400 mb-4">Heart some items on the marketplace to save them here.</p>
+                            <Link to="/items"><Button>Browse Marketplace</Button></Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {savedItems.filter(item => profile?.saved_items?.includes(item.id)).map(item => (
+                                <MyListingCard
+                                    key={item.id}
+                                    item={item}
+                                    // Make it non-deletable but clickable? OR use ItemCard?
+                                    // Mmh MyListingCard has delete button, let's just intercept click or use ItemCard.
+                                    onDelete={async (deletedItem) => {
+                                        // "Delete" here means "Unsave"
+                                        const { toggleSavedItem } = useAuthStore.getState()
+                                        await toggleSavedItem(deletedItem.id)
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Danger Zone */}

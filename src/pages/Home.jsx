@@ -39,7 +39,7 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 relative z-10">
                     <div className="max-w-2xl animate-slide-up">
                         <span className="inline-flex items-center gap-2 bg-brand-red/10 border border-brand-red/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-                            🎓 Exclusively for Chandigarh University
+                            Exclusively for Chandigarh University
                         </span>
                         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
                             Buy, Sell &<br />

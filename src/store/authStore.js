@@ -83,4 +83,23 @@ export const useAuthStore = create((set, get) => ({
     demoLogin: () => {
         set({ user: { id: MOCK_USER.id, email: MOCK_USER.email }, profile: MOCK_USER })
     },
+
+    toggleSavedItem: async (itemId) => {
+        if (!isBackendConfigured) return;
+        const profile = get().profile;
+        if (!profile) return;
+        
+        const isSaved = profile.saved_items?.includes(itemId);
+        try {
+            if (isSaved) {
+                const { saved_items } = await api.delete(`/api/items/${itemId}/save`);
+                set({ profile: { ...profile, saved_items } });
+            } else {
+                const { saved_items } = await api.post(`/api/items/${itemId}/save`);
+                set({ profile: { ...profile, saved_items } });
+            }
+        } catch (err) {
+            console.error('[Auth] Failed to toggle save:', err);
+        }
+    },
 }))

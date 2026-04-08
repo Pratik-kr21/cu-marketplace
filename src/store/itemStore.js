@@ -83,4 +83,15 @@ export const useItemStore = create((set, get) => ({
         }))
         return data
     },
+
+    fetchSavedItems: async () => {
+        if (!isBackendConfigured) return [];
+        try {
+            const data = await api.get('/api/items/saved');
+            return data || [];
+        } catch (err) {
+            console.error('[Items] fetchSavedItems error:', err);
+            return [];
+        }
+    },
 }))

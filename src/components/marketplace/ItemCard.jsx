@@ -1,11 +1,23 @@
 import { useNavigate } from 'react-router-dom'
-import { Star, MapPin, ArrowRightLeft, Tag } from 'lucide-react'
+import { Star, MapPin, ArrowRightLeft, Tag, Heart } from 'lucide-react'
 import Badge, { ConditionBadge } from '../ui/Badge'
 import LazyImage from '../ui/LazyImage'
+import { useAuthStore } from '../../store/authStore'
 
 export default function ItemCard({ item }) {
     const navigate = useNavigate()
     const img = item.images?.[0]
+    const { user, profile, toggleSavedItem } = useAuthStore()
+    const isSaved = profile?.saved_items?.includes(item.id)
+
+    const handleSave = (e) => {
+        e.stopPropagation()
+        if (!user) {
+            navigate('/login')
+            return
+        }
+        toggleSavedItem(item.id)
+    }
 
     const priceLabel = item.is_barter_only
         ? null
@@ -30,7 +42,7 @@ export default function ItemCard({ item }) {
                     </div>
                 )}
                 {/* Overlay badges */}
-                <div className="absolute top-2 left-2 flex gap-1">
+                <div className="absolute top-2 left-2 flex gap-1 z-10">
                     {item.is_barter_only && (
                         <span className="flex items-center gap-1 bg-gray-900 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                             <ArrowRightLeft className="w-3 h-3" /> Barter
@@ -38,6 +50,14 @@ export default function ItemCard({ item }) {
                     )}
                     {item.is_free && <span className="bg-green-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">Free</span>}
                 </div>
+                {/* Save Button */}
+                <button
+                    onClick={handleSave}
+                    className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white rounded-full text-gray-500 hover:text-brand-red transition-colors z-10 shadow-sm"
+                    aria-label="Save item"
+                >
+                    <Heart className={`w-4 h-4 ${isSaved ? 'fill-brand-red text-brand-red' : ''}`} />
+                </button>
             </div>
 
             {/* Body */}

@@ -23,6 +23,7 @@ function profileToJSON(user) {
         department: user.department,
         hostel: user.hostel,
         avatar_url: user.avatar_url,
+        saved_items: user.saved_items ? user.saved_items.map(id => id.toString()) : [],
     }
 }
 

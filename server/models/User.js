@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpires: { type: Date, default: null },
     verificationRequestCount: { type: Number, default: 0 },
     lastVerificationRequest: { type: Date, default: null },
+    saved_items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
 }, { timestamps: true })
 
 userSchema.index(
