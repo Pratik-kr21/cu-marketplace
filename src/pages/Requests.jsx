@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import Modal from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import LazyImage from '../components/ui/LazyImage'
+import Avatar from '../components/ui/Avatar'
 
 const CATEGORIES = [
     'Textbooks',
@@ -188,10 +189,10 @@ export default function Requests() {
                                 </button>
                             )}
                             <div className="flex items-center gap-3 mb-4">
-                                <img
-                                    src={req.userId?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(req.userId?.full_name || 'User')}&background=random`}
-                                    alt="User"
-                                    className="w-10 h-10 rounded-full bg-gray-100 object-cover"
+                                <Avatar 
+                                    name={req.userId?.full_name} 
+                                    src={req.userId?.avatar_url} 
+                                    size="md" 
                                 />
                                 <div>
                                     <p className="font-semibold text-gray-900 leading-tight">{req.userId?.full_name}</p>
