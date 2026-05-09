@@ -35,7 +35,7 @@ export default function VerifyEmail() {
     }, [token, verifyEmail, navigate])
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 py-12">
             <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md w-full text-center shadow-sm animate-scale-in">
                 {status === 'verifying' && (
                     <div className="flex flex-col items-center">

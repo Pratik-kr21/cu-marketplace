@@ -50,7 +50,7 @@ export default function ResetPassword() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 py-12">
                 <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-card p-8 text-center animate-scale-in">
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <ShieldCheck className="w-8 h-8 text-green-600" />
@@ -68,7 +68,7 @@ export default function ResetPassword() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 py-12">
             <div className="w-full max-w-md animate-scale-in">
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-8">
                     <div className="flex flex-col items-center mb-6">

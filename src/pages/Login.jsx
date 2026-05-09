@@ -34,7 +34,7 @@ export default function Login() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 py-12">
             <div className="w-full max-w-md animate-scale-in">
                 {/* Card */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-8">
