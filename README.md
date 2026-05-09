@@ -417,7 +417,7 @@ cu-marketplace/
 ## 🌱 Roadmap
 
 - [ ] Socket.io integration for live real-time chat
-- [ ] Wishlist / Saved Items feature
+- [x] Wishlist / Saved Items feature
 - [ ] Advanced search with autocomplete suggestions
 - [ ] Seller verification badges
 - [x] Image compression before Cloudinary upload
