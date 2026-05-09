@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ShoppingBag, MessageCircle, User, Menu, X, Plus, LogOut, Package, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
@@ -12,6 +12,18 @@ export default function Navbar() {
     const [userMenuOpen, setUserMenuOpen] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
     const navigate = useNavigate()
+    const userMenuRef = useRef(null)
+
+    // Close user menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setUserMenuOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     useEffect(() => {
         if (!user || !isBackendConfigured) return
@@ -93,7 +105,7 @@ export default function Navbar() {
                                 </Link>
                             )}
                             {/* User menu */}
-                            <div className="relative">
+                            <div className="relative" ref={userMenuRef}>
                                 <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
                                     <Avatar name={displayName} src={profile?.avatar_url} size="sm" />
                                 </button>
