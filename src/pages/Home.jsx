@@ -15,7 +15,7 @@ const categories = [
 ]
 
 const features = [
-    { icon: ShieldCheck, title: 'cuchd mail id Only', desc: 'Access restricted to verified @cuchd.in email addresses — your campus, your community.' },
+    { icon: ShieldCheck, title: 'cuchd email id Only', desc: 'Access restricted to verified @cuchd.in email addresses — your campus, your community.' },
     { icon: ArrowRightLeft, title: 'Barter System', desc: 'No cash? No problem. Trade items directly with fellow students using our barter system.' },
     { icon: MapPin, title: 'Campus Meetup Points', desc: 'Safe, pre-defined meeting spots on campus for easy and secure item exchanges.' },
 ]

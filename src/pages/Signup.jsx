@@ -56,7 +56,7 @@ export default function Signup() {
                     <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-7 h-7 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Check your cuchd mail id!</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Check your cuchd email id!</h2>
                     <p className="text-sm text-gray-500 mb-1">We've sent a verification link to:</p>
                     <p className="text-sm font-semibold text-brand-red mb-6">{derivedEmail}</p>
                     <p className="text-xs text-gray-400 mb-6">Click it to activate your account, then you can sign in.</p>
@@ -189,7 +189,7 @@ export default function Signup() {
                 </div>
 
                 <p className="text-center text-xs text-gray-400 mt-4">
-                    cuchd mail id only - Login with <strong>UID@cuchd.in</strong>
+                    cuchd email id only - Login with <strong>UID@cuchd.in</strong>
                 </p>
             </div>
         </div>
