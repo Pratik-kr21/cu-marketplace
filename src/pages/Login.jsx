@@ -55,7 +55,7 @@ export default function Login() {
                     )}
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        <Input label="cuchd email id" type="email" placeholder="23bce10055@cuchd.in" error={errors.email?.message} {...register('email')} />
+                        <Input label="CUCHD Email" type="email" placeholder="23bce10055@cuchd.in" error={errors.email?.message} {...register('email')} />
                         <div>
                             <Input label="Password" type={showPass ? 'text' : 'password'} placeholder="••••••••" error={errors.password?.message} {...register('password')} />
                             <div className="flex items-center justify-between mt-1.5">
