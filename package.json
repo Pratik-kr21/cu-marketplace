@@ -12,6 +12,7 @@
     "dependencies": {
         "@hookform/resolvers": "^5.2.2",
         "browser-image-compression": "^2.0.2",
+        "framer-motion": "^12.38.0",
         "lucide-react": "^0.323.0",
         "mongodb": "^7.1.0",
         "react": "^18.2.0",

@@ -417,10 +417,8 @@ cu-marketplace/
 ## 🌱 Roadmap
 
 - [ ] Socket.io integration for live real-time chat
-- [x] Wishlist / Saved Items feature
 - [ ] Advanced search with autocomplete suggestions
 - [ ] Seller verification badges
-- [x] Image compression before Cloudinary upload
 - [ ] Automated E2E testing suite
 - [ ] Dark mode toggle across the entire app
 - [ ] Multi-language support (Hindi/English)

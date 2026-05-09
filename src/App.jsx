@@ -22,6 +22,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import AdminDashboard from './pages/AdminDashboard'
 import DeveloperContact from './pages/DeveloperContact'
+import Requests from './pages/Requests'
 
 function AuthSplash() {
     return (
@@ -67,6 +68,7 @@ export default function App() {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/marketplace" element={<Marketplace />} />
+                        <Route path="/requests" element={<Requests />} />
                         <Route path="/items/:id" element={<ItemDetail />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />

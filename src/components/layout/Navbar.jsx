@@ -40,6 +40,7 @@ export default function Navbar() {
 
     const navLinks = [
         { to: '/marketplace', label: 'Browse' },
+        { to: '/requests', label: 'Requests' },
         { to: '/trades', label: 'My Trades' },
         { to: '/chat', label: 'Messages', badge: unreadCount },
     ]

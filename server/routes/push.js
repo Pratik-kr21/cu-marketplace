@@ -39,6 +39,37 @@ export async function sendPushNotification(user_id, title, message, url = '/') {
     }
 }
 
+export async function broadcastPushNotification(title, message, url = '/', excludeUserId = null) {
+    try {
+        const query = excludeUserId ? { user_id: { $ne: excludeUserId } } : {}
+        const subs = await PushSubscription.find(query)
+        if (!subs || subs.length === 0) return 0
+
+        const payload = JSON.stringify({
+            title: title || 'CU Marketplace',
+            message: message || '',
+            url: url || '/'
+        })
+
+        await Promise.all(subs.map(async sub => {
+            try {
+                await webpush.sendNotification({
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth }
+                }, payload)
+            } catch (err) {
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                    await PushSubscription.deleteOne({ _id: sub._id })
+                }
+            }
+        }))
+        return subs.length
+    } catch (err) {
+        console.error('Push broadcast helper error:', err)
+        return 0
+    }
+}
+
 const router = Router()
 
 // Upsert push subscription
