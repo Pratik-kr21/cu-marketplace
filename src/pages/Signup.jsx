@@ -51,7 +51,7 @@ export default function Signup() {
 
     if (success) {
         return (
-            <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 py-12">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md w-full text-center animate-scale-in">
                     <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-7 h-7 text-green-600" />
@@ -67,11 +67,11 @@ export default function Signup() {
     }
 
     return (
-        <div className="flex-1 bg-gray-50 flex items-center justify-center p-4 py-12">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md animate-scale-in">
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-card p-8">
                     <div className="flex flex-col items-center mb-7">
-                        <img src="/Logo.svg" alt="CU Market Logo" className="h-24 w-24 object-contain mb-4 rounded-3xl shadow-md" />
+                        <img src="/Logo.svg" alt="CU Market Logo" className="h-24 w-auto object-contain mb-4 rounded-3xl shadow-md" />
                         <h1 className="text-2xl font-bold text-gray-900">Join CU Market</h1>
                         <p className="text-sm text-gray-500 mt-1">Exclusively for Chandigarh University students</p>
                     </div>

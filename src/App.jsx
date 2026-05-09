@@ -85,7 +85,7 @@ export default function App() {
                 <InstallPWA />
                 <NotificationPrompt />
                 <Navbar />
-                <main className="flex-1 flex flex-col">
+                <main className="flex-1">
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/marketplace" element={<Marketplace />} />
