@@ -81,10 +81,15 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 - **Trade status tracking** — pending, accepted, rejected, completed
 - **Dedicated Trade Dashboard** to manage all incoming/outgoing negotiations
 
-### 💬 Real-Time Chat
-- **Integrated messaging** between buyers and sellers
-- **Conversation threads** organized per trade/item context
+### 💬 Real-Time Chat (Socket.io)
+- **Instant messaging** powered by Socket.io for zero-latency communication
+- **Real-time unread badges** and message previews
 - **Message persistence** stored in MongoDB for full chat history
+
+### 📋 Item Requests
+- **Community broadcast** — request an item you need and notify the campus
+- **Offer system** — sellers can respond to requests by offering their listed items
+- **Direct fulfillment** — seamlessly bridge requests to the trade/chat system
 
 ### 🔔 Push Notifications (PWA)
 - **Installable as a native app** via Progressive Web App manifest
@@ -416,7 +421,6 @@ cu-marketplace/
 
 ## 🌱 Roadmap
 
-- [ ] Socket.io integration for live real-time chat
 - [ ] Advanced search with autocomplete suggestions
 - [ ] Seller verification badges
 - [ ] Automated E2E testing suite
