@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from './store/authStore'
 import { ShoppingBag } from 'lucide-react'
 import Navbar from './components/layout/Navbar'
@@ -61,8 +61,16 @@ export default function App() {
     const init = useAuthStore(s => s.init)
     const loading = useAuthStore(s => s.loading)
     const user = useAuthStore(s => s.user)
+    const [logoLoaded, setLogoLoaded] = useState(false)
     
     useEffect(() => { init() }, [])
+
+    useEffect(() => {
+        const img = new Image()
+        img.src = '/Logo.svg'
+        img.onload = () => setLogoLoaded(true)
+        img.onerror = () => setLogoLoaded(true) // fallback to prevent infinite load
+    }, [])
 
     useEffect(() => {
         if (user && user.id) {
@@ -76,7 +84,7 @@ export default function App() {
         }
     }, [user])
 
-    if (loading) return <AuthSplash />
+    if (loading || !logoLoaded) return <AuthSplash />
 
     return (
         <BrowserRouter>
