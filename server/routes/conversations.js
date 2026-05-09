@@ -5,6 +5,7 @@ import Item from '../models/Item.js'
 import User from '../models/User.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { sendPushNotification } from './push.js'
+import { io, connectedUsers } from '../index.js'
 
 const router = Router()
 
@@ -165,12 +166,21 @@ router.post('/:id/messages', authMiddleware, async (req, res) => {
             console.error('Failed to send chat push notification:', e)
         }
 
-        return res.status(201).json({
+        const msgRes = {
             id: msg._id.toString(),
             content: msg.content,
             sender_id: msg.sender_id.toString(),
             created_at: msg.createdAt,
-        })
+            conversation_id: convo._id.toString()
+        }
+
+        // Emit via Socket.io to the receiver if they are connected
+        const receiverSocketId = connectedUsers.get(receiver_id.toString())
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit('receive_message', msgRes)
+        }
+
+        return res.status(201).json(msgRes)
     } catch (err) {
         console.error('[Messages] Create error:', err)
         return res.status(500).json({ error: err.message })

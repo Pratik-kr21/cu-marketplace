@@ -3,6 +3,7 @@ import { Send, MessageCircle, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { api, isBackendConfigured } from '../lib/api'
 import { sendPushToUser } from '../lib/pushNotifications'
+import { socket } from '../lib/socket'
 import Avatar from '../components/ui/Avatar'
 import { Link, useLocation } from 'react-router-dom'
 import Button from '../components/ui/Button'
@@ -17,7 +18,7 @@ function timeAgo(dateStr) {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-const POLL_INTERVAL = 3000
+const POLL_INTERVAL = 30000 // Reduced polling since we have sockets now
 
 export default function Chat() {
     const { user, profile } = useAuthStore()
@@ -66,14 +67,51 @@ export default function Chat() {
     useEffect(() => { fetchConversations() }, [fetchConversations])
     useEffect(() => { fetchMessages() }, [fetchMessages])
 
+    // Socket Integration for real-time messaging
+    useEffect(() => {
+        const handleNewMessage = (msg) => {
+            // 1. Update messages list if it belongs to active conversation
+            if (activeId === msg.conversation_id) {
+                setMessages(prev => [...prev, msg])
+                // trigger read status on backend since we are looking at it
+                api.get(`/api/conversations/${activeId}/messages`).catch(() => {})
+            }
+
+            // 2. Update conversations list to show new message preview & unread badge
+            setConversations(prev => {
+                const convoExists = prev.find(c => c.id === msg.conversation_id)
+                if (!convoExists) {
+                    fetchConversations()
+                    return prev
+                }
+                return prev.map(c => {
+                    if (c.id === msg.conversation_id) {
+                        return {
+                            ...c,
+                            messages: [msg],
+                            unread_count: activeId === msg.conversation_id ? 0 : (c.unread_count || 0) + 1
+                        }
+                    }
+                    return c
+                }).sort((a, b) => new Date(b.messages[0]?.created_at || b.created_at) - new Date(a.messages[0]?.created_at || a.created_at))
+            })
+        }
+
+        socket.on('receive_message', handleNewMessage)
+
+        return () => {
+            socket.off('receive_message', handleNewMessage)
+        }
+    }, [activeId, fetchConversations])
+
+    // Keep slow polling just as a fallback
     useEffect(() => {
         if (!activeId || !isBackendConfigured) return
         const interval = setInterval(() => {
-            fetchMessages(true)
             fetchConversations(true)
         }, POLL_INTERVAL)
         return () => clearInterval(interval)
-    }, [activeId, fetchMessages])
+    }, [activeId, fetchConversations])
 
     useEffect(() => {
         if (containerRef.current) {

@@ -7,6 +7,7 @@ import Footer from './components/layout/Footer'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import InstallPWA from './components/ui/InstallPWA'
 import NotificationPrompt from './components/ui/NotificationPrompt'
+import { connectSocket, disconnectSocket } from './lib/socket'
 
 import Home from './pages/Home'
 import Marketplace from './pages/Marketplace'
@@ -53,7 +54,21 @@ function ScrollToTop() {
 export default function App() {
     const init = useAuthStore(s => s.init)
     const loading = useAuthStore(s => s.loading)
+    const user = useAuthStore(s => s.user)
+    
     useEffect(() => { init() }, [])
+
+    useEffect(() => {
+        if (user && user.id) {
+            connectSocket(user.id)
+        } else {
+            disconnectSocket()
+        }
+        
+        return () => {
+            disconnectSocket()
+        }
+    }, [user])
 
     if (loading) return <AuthSplash />
 
