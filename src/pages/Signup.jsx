@@ -56,7 +56,7 @@ export default function Signup() {
                     <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-7 h-7 text-green-600" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Check your CU inbox!</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Check your cuchd mail id!</h2>
                     <p className="text-sm text-gray-500 mb-1">We've sent a verification link to:</p>
                     <p className="text-sm font-semibold text-brand-red mb-6">{derivedEmail}</p>
                     <p className="text-xs text-gray-400 mb-6">Click it to activate your account, then you can sign in.</p>
@@ -104,7 +104,6 @@ export default function Signup() {
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-gray-700">
                                 Student UID *
-                                <span className="ml-1 text-xs text-gray-400 font-normal">(your email prefix)</span>
                             </label>
                             <input
                                 placeholder="e.g. 23BCE10055"
@@ -190,7 +189,7 @@ export default function Signup() {
                 </div>
 
                 <p className="text-center text-xs text-gray-400 mt-4">
-                    CU students only - Login with <strong>UID@cuchd.in</strong>
+                    cuchd mail id only - Login with <strong>UID@cuchd.in</strong>
                 </p>
             </div>
         </div>

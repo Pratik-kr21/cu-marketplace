@@ -15,7 +15,7 @@ const categories = [
 ]
 
 const features = [
-    { icon: ShieldCheck, title: 'CU Students Only', desc: 'Access restricted to verified @cuchd.in email addresses — your campus, your community.' },
+    { icon: ShieldCheck, title: 'cuchd mail id Only', desc: 'Access restricted to verified @cuchd.in email addresses — your campus, your community.' },
     { icon: ArrowRightLeft, title: 'Barter System', desc: 'No cash? No problem. Trade items directly with fellow students using our barter system.' },
     { icon: MapPin, title: 'Campus Meetup Points', desc: 'Safe, pre-defined meeting spots on campus for easy and secure item exchanges.' },
 ]
@@ -127,7 +127,7 @@ export default function Home() {
             {/* CTA */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
                 <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Got something to sell or trade?</h2>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">List your item in under 2 minutes. Reach thousands of CU students instantly.</p>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">List your item in under 2 minutes. Reach thousands of cuchd students instantly.</p>
                 <Link to="/create-listing" className="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-dark text-white font-semibold px-8 py-3 rounded-lg transition-colors shadow-md">
                     Post a Listing — It's Free <ArrowRight className="w-4 h-4" />
                 </Link>
