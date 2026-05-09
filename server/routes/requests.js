@@ -9,7 +9,7 @@ const router = Router()
 router.get('/', async (req, res) => {
     try {
         const requests = await ItemRequest.find({ status: 'active' })
-            .populate('userId', 'name email profilePic')
+            .populate('userId', 'full_name email avatar_url')
             .sort({ createdAt: -1 })
         res.json(requests)
     } catch (err) {

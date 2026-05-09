@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Bell, Clock, Search, X } from 'lucide-react'
+import { Plus, Bell, Clock, Search, X, MessageCircle, ArrowRightLeft, CheckCircle, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
+import Modal from '../components/ui/Modal'
+import Button from '../components/ui/Button'
+import LazyImage from '../components/ui/LazyImage'
 
 const CATEGORIES = [
     'Textbooks',
@@ -17,11 +20,25 @@ const CATEGORIES = [
 
 export default function Requests() {
     const user = useAuthStore(s => s.user)
+    const navigate = useNavigate()
     const [requests, setRequests] = useState([])
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
     const [formData, setFormData] = useState({ title: '', description: '', category: CATEGORIES[0] })
     const [submitting, setSubmitting] = useState(false)
+
+    // Offer Modal State
+    const [offerModal, setOfferModal] = useState(false)
+    const [selectedRequest, setSelectedRequest] = useState(null)
+    const [myItems, setMyItems] = useState([])
+    const [loadingMyItems, setLoadingMyItems] = useState(false)
+    const [selectedItem, setSelectedItem] = useState(null)
+    const [offerType, setOfferType] = useState('cash')
+    const [cashAmount, setCashAmount] = useState('')
+    const [offerMsg, setOfferMsg] = useState('')
+    const [offerSending, setOfferSending] = useState(false)
+    const [offerSuccess, setOfferSuccess] = useState(false)
+    const [offerError, setOfferError] = useState('')
 
     useEffect(() => {
         fetchRequests()
@@ -40,7 +57,7 @@ export default function Requests() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!user) return alert('Please login to request an item.')
+        if (!user) return navigate('/login')
         setSubmitting(true)
         try {
             await api.post('/api/requests', formData)
@@ -63,6 +80,56 @@ export default function Requests() {
         } catch (err) {
             console.error(err)
             alert(err.message || 'Failed to delete request')
+        }
+    }
+
+    const handleOpenOfferModal = (req) => {
+        if (!user) return navigate('/login')
+        setSelectedRequest(req)
+        setOfferModal(true)
+        setLoadingMyItems(true)
+        api.get('/api/items/my').then(data => {
+            setMyItems(data || [])
+        }).finally(() => setLoadingMyItems(false))
+    }
+
+    const handleSendOffer = async () => {
+        if (!selectedItem) {
+            setOfferError('Please select an item you have to offer.')
+            return
+        }
+        if (offerType === 'cash' && !cashAmount) {
+            setOfferError('Please enter the price you want for this item.')
+            return
+        }
+        setOfferSending(true)
+        setOfferError('')
+        try {
+            let offerDesc = `Responding to request: ${selectedRequest.title}`
+            if (offerType === 'cash') offerDesc = `Offering ${selectedItem.title} for ₹${cashAmount}`
+            else offerDesc = `Offering ${selectedItem.title} for Barter`
+
+            await api.post('/api/trades', {
+                item_id: selectedItem.id,
+                buyer_id: selectedRequest.userId._id, // Requester is the buyer
+                seller_id: user.id, // Me
+                offer_item_desc: offerDesc,
+                message: offerMsg.trim(),
+                type: offerType,
+                proposed_cash: offerType === 'cash' ? Number(cashAmount) : 0
+            })
+            setOfferSuccess(true)
+            setTimeout(() => {
+                setOfferModal(false)
+                setOfferSuccess(false)
+                setSelectedItem(null)
+                setCashAmount('')
+                setOfferMsg('')
+            }, 2000)
+        } catch (err) {
+            setOfferError(err.message || 'Failed to send offer.')
+        } finally {
+            setOfferSending(false)
         }
     }
 
@@ -122,12 +189,12 @@ export default function Requests() {
                             )}
                             <div className="flex items-center gap-3 mb-4">
                                 <img
-                                    src={req.userId?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(req.userId?.name || 'User')}&background=random`}
+                                    src={req.userId?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(req.userId?.full_name || 'User')}&background=random`}
                                     alt="User"
                                     className="w-10 h-10 rounded-full bg-gray-100 object-cover"
                                 />
                                 <div>
-                                    <p className="font-semibold text-gray-900 leading-tight">{req.userId?.name}</p>
+                                    <p className="font-semibold text-gray-900 leading-tight">{req.userId?.full_name}</p>
                                     <p className="text-xs text-gray-500 flex items-center gap-1">
                                         <Clock size={12} />
                                         {new Date(req.createdAt).toLocaleDateString()}
@@ -140,20 +207,20 @@ export default function Requests() {
                             <h3 className="text-lg font-bold text-gray-900 mb-2">{req.title}</h3>
                             <p className="text-gray-600 text-sm mb-6">{req.description}</p>
                             
-                            {(!user || req.userId?._id !== user._id) && (
-                                <Link
-                                    to={`/chat?userId=${req.userId?._id}`}
+                            {(!user || req.userId?._id !== user.id) && (
+                                <button
+                                    onClick={() => handleOpenOfferModal(req)}
                                     className="w-full block text-center py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
                                 >
                                     I have this item
-                                </Link>
+                                </button>
                             )}
                         </motion.div>
                     ))}
                 </div>
             )}
 
-            {/* Modal */}
+            {/* Request Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
                     <motion.div
@@ -215,6 +282,107 @@ export default function Requests() {
                     </motion.div>
                 </div>
             )}
+
+            {/* Offer Modal */}
+            <Modal isOpen={offerModal} onClose={() => setOfferModal(false)} title="Make an Offer">
+                {offerSuccess ? (
+                    <div className="py-8 text-center">
+                        <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <CheckCircle className="w-7 h-7 text-green-600" />
+                        </div>
+                        <h3 className="font-bold text-gray-900 text-lg mb-1">Offer Sent!</h3>
+                        <p className="text-sm text-gray-500">The requester will be notified of your offer.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                            Select one of your items to offer to <strong>{selectedRequest?.userId?.full_name || 'User'}</strong>.
+                        </p>
+
+                        <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                            <button
+                                onClick={() => setOfferType('cash')}
+                                className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${offerType === 'cash' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+                            >
+                                Sell for Cash
+                            </button>
+                            <button
+                                onClick={() => setOfferType('barter')}
+                                className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${offerType === 'barter' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+                            >
+                                Open to Barter
+                            </button>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-2">Pick your item</label>
+                            {loadingMyItems ? (
+                                <div className="flex justify-center py-6">
+                                    <Loader2 className="w-5 h-5 text-brand-red animate-spin" />
+                                </div>
+                            ) : myItems.length === 0 ? (
+                                <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 text-center">
+                                    <p className="text-sm text-gray-500 mb-2">You have no active listings to offer.</p>
+                                    <Link to="/create-listing" className="text-sm text-brand-red font-semibold hover:underline">
+                                        + Create a listing first
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                                    {myItems.map(item => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => setSelectedItem(item)}
+                                            className={`flex items-center gap-2 p-2 rounded-xl border-2 text-left transition-all ${selectedItem?.id === item.id ? 'border-brand-red bg-brand-subtle' : 'border-gray-100 hover:border-gray-200'}`}
+                                        >
+                                            <div className="w-10 h-10 rounded bg-gray-50 overflow-hidden flex-shrink-0">
+                                                {item.images?.[0] ? <LazyImage src={item.images[0]} alt="" /> : <div className="w-full h-full bg-gray-200" />}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[11px] font-bold text-gray-900 truncate">{item.title}</p>
+                                                <p className="text-[9px] text-gray-500 uppercase">{item.is_free ? 'Free' : `₹${item.price}`}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {offerType === 'cash' && (
+                            <div>
+                                <label className="text-sm font-medium text-gray-700 block mb-1">Your Price (₹)</label>
+                                <input
+                                    type="number"
+                                    value={cashAmount}
+                                    onChange={e => setCashAmount(e.target.value)}
+                                    placeholder="How much do you want for it?"
+                                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-red/20"
+                                />
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-1">Message (Optional)</label>
+                            <textarea
+                                value={offerMsg}
+                                onChange={e => setOfferMsg(e.target.value)}
+                                rows={2}
+                                placeholder="I have this in great condition..."
+                                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-red/20 resize-none"
+                            />
+                        </div>
+
+                        {offerError && <p className="text-xs text-red-500">{offerError}</p>}
+
+                        <div className="flex gap-3">
+                            <Button variant="secondary" className="flex-1" onClick={() => setOfferModal(false)}>Cancel</Button>
+                            <Button className="flex-1" onClick={handleSendOffer} disabled={offerSending || !selectedItem}>
+                                {offerSending ? 'Sending...' : 'Send Offer'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

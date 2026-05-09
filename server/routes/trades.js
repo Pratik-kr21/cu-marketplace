@@ -75,18 +75,28 @@ router.get('/', authMiddleware, async (req, res) => {
 // Create trade
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { item_id, seller_id, offer_item_desc, message, desired_quantity, proposed_items, proposed_cash } = req.body
-        if (!item_id || !seller_id) return res.status(400).json({ error: 'item_id and seller_id required' })
+        const { item_id, seller_id, buyer_id, offer_item_desc, message, desired_quantity, proposed_items, proposed_cash } = req.body
+        if (!item_id) return res.status(400).json({ error: 'item_id required' })
+
+        // If buyer_id is provided, it means a seller is making an offer to a specific buyer (e.g. responding to a request)
+        // Otherwise, the logged in user is the buyer.
+        const finalBuyerId = buyer_id || req.user._id
+        const finalSellerId = seller_id || req.user._id
+
+        if (finalBuyerId.toString() === finalSellerId.toString()) {
+            return res.status(400).json({ error: 'You cannot trade with yourself' })
+        }
+
         const trade = await Trade.create({
             item_id,
-            buyer_id: req.user._id,
-            seller_id,
+            buyer_id: finalBuyerId,
+            seller_id: finalSellerId,
             desired_quantity: desired_quantity || 1,
             type: req.body.type || 'barter',
             offer_item_desc: offer_item_desc || 'Open trade offer',
             proposed_items: proposed_items || [],
             proposed_cash: proposed_cash || 0,
-            action_required_from: seller_id,
+            action_required_from: req.user._id.toString() === finalSellerId.toString() ? finalBuyerId : finalSellerId,
             message: message || '',
             status: 'pending',
         })

@@ -13,7 +13,7 @@ export default function Login() {
     const { signIn } = useAuthStore()
     const navigate = useNavigate()
     const location = useLocation()
-    const from = location.state?.from?.pathname || '/marketplace'
+    const from = location.state?.from?.pathname || '/'
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [showPass, setShowPass] = useState(false)
