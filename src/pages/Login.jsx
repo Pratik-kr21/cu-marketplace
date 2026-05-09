@@ -42,7 +42,7 @@ export default function Login() {
                     <div className="flex flex-col items-center mb-8">
                         <img src="/Logo.svg" alt="CU Market Logo" className="h-24 w-auto object-contain mb-4 rounded-3xl shadow-md" />
                         <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-                        <p className="text-sm text-gray-500 mt-1">Sign in to your CU Market account</p>
+                        <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
                     </div>
 
                     {error && (
@@ -55,7 +55,7 @@ export default function Login() {
                     )}
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        <Input label="CU Email" type="email" placeholder="23bce10055@cuchd.in" error={errors.email?.message} {...register('email')} />
+                        <Input label="cuchd email id" type="email" placeholder="23bce10055@cuchd.in" error={errors.email?.message} {...register('email')} />
                         <div>
                             <Input label="Password" type={showPass ? 'text' : 'password'} placeholder="••••••••" error={errors.password?.message} {...register('password')} />
                             <div className="flex items-center justify-between mt-1.5">

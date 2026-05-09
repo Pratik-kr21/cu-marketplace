@@ -58,7 +58,7 @@ export default function ForgotPassword() {
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">Forgot Password</h1>
                         <p className="text-sm text-gray-500 mt-1 text-center">
-                            Enter your CU email address and we'll send you a link to reset your password.
+                            Enter your cuchd email id and we'll send you a link to reset your password.
                         </p>
                     </div>
 
@@ -68,7 +68,7 @@ export default function ForgotPassword() {
 
                     <form onSubmit={onSubmit} className="space-y-4">
                         <Input
-                            label="CU Email"
+                            label="cuchd email id"
                             type="email"
                             placeholder="e.g. 23bce10055@cuchd.in"
                             value={email}
