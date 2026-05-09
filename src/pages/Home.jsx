@@ -38,15 +38,20 @@ export default function Home() {
                 </div>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 relative z-10">
                     <div className="max-w-2xl animate-slide-up">
-                        <span className="inline-flex items-center gap-2 bg-brand-red/10 border border-brand-red/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-                            Exclusively for Chandigarh University
-                        </span>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            <span className="inline-flex items-center gap-2 bg-brand-red/10 border border-brand-red/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                                Exclusively for Chandigarh University
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold px-3 py-1.5 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                                <ShieldCheck className="w-3.5 h-3.5" /> 100% Free Forever
+                            </span>
+                        </div>
                         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
                             Buy, Sell &<br />
                             <span className="text-brand-red">Barter</span> on Campus
                         </h1>
                         <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-                            The student marketplace made for CU. List your textbooks, electronics, hostel essentials — or trade directly with other students, no cash required.
+                            The student marketplace made for CU. List your textbooks, electronics, hostel essentials — or trade directly with other students. <span className="text-white font-semibold">Zero platform fees, completely free to use.</span>
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <Link to="/marketplace" className="inline-flex items-center justify-center gap-2 bg-brand-red hover:bg-brand-dark text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-lg">
