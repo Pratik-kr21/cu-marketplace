@@ -23,7 +23,8 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 <img src="https://img.shields.io/badge/Nodemailer-0F9DCE?style=flat-square&logo=minutemailer&logoColor=white" alt="Nodemailer" />
 <img src="https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white" alt="Zod" />
 <img src="https://img.shields.io/badge/PWA-5A0FC8?style=flat-square&logo=pwa&logoColor=white" alt="PWA" />
-<img src="https://img.shields.io/badge/Web_Push-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Push" />
+<img src="https://img.shields.io/badge/Android_APK-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android APK" />
+<img src="https://img.shields.io/badge/Bubblewrap_TWA-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Bubblewrap TWA" />
 <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
 
 <br/><br/>
@@ -63,7 +64,7 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 
 ### 🔐 Authentication & Access Control
 - **University-exclusive registration** — only `@cuchd.in` emails are accepted
-- **Email verification** via automated HTML emails (Gmail SMTP with Nodemailer)
+- **OTP Email Verification** via secure, stylized HTML emails (Gmail SMTP with Nodemailer)
 - **JWT session management** with secure Bcrypt password hashing
 - **Forgot/Reset password** flow with tokenized email links
 - **Admin Dashboard** for platform-wide user & listing management
@@ -91,11 +92,12 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 - **Offer system** — sellers can respond to requests by offering their listed items
 - **Direct fulfillment** — seamlessly bridge requests to the trade/chat system
 
-### 🔔 Push Notifications (PWA)
-- **Installable as a native app** via Progressive Web App manifest
-- **Service Worker integration** for background web-push alerts
-- **Notification prompts** for trade updates, messages, and listing activity
-- **Safe graceful fallback** in Incognito or unsupported browser contexts
+### 📱 Native Android App (Bubblewrap TWA)
+- **Standalone Android APK** available for direct download
+- **Trusted Web Activity (TWA)** integration for a seamless, URL-bar-free native experience
+- **Digital Asset Links** configured for secure cryptographic app verification
+- **Native Push Notifications** utilizing Chrome's notification delegation
+- **Auto-updating** — app stays in sync with web deployments instantly
 
 ### 📧 Developer Contact System
 - **Authenticated contact form** — only logged-in students can reach the developer
@@ -131,6 +133,7 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 | **React Hook Form + Zod** | Form handling with schema validation |
 | **Lucide React** | Beautiful, consistent icon system |
 | **Vite PWA Plugin** | Service Worker & manifest generation |
+| **Bubblewrap CLI** | Trusted Web Activity (TWA) Android APK Generation |
 
 ### Backend
 
