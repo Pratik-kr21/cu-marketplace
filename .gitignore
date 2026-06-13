@@ -52,8 +52,12 @@ android.keystore
 *.idsig
 app/
 gradle/
+.gradle/
 gradlew
 gradlew.bat
 build.gradle
 settings.gradle
 gradle.properties
+local.properties
+manifest-checksum.txt
+store_icon.png
