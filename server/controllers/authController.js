@@ -2,9 +2,10 @@ import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 import Trade from '../models/Trade.js'
 import { sendEmail } from '../utils/email.js'
-import { generateVerificationToken, hashToken } from '../utils/token.js'
+import { generateVerificationToken, generateOTP, hashToken } from '../utils/token.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('FATAL: JWT_SECRET environment variable is not set.')
 
 function signToken(user) {
     return jwt.sign(
@@ -47,7 +48,7 @@ export const register = async (req, res) => {
             }
         }
 
-        const { rawToken, hashedToken } = generateVerificationToken()
+        const { rawOTP, hashedOTP } = generateOTP()
 
         const user = new User({
             email: email.toLowerCase(),
@@ -57,43 +58,62 @@ export const register = async (req, res) => {
             department: department || '',
             hostel: hostel || '',
             isVerified: false,
-            emailVerificationToken: hashedToken,
-            emailVerificationExpires: Date.now() + 60 * 60 * 1000, // 1 hour
+            emailVerificationToken: hashedOTP,
+            emailVerificationExpires: Date.now() + 10 * 60 * 1000, // 10 minutes
             verificationRequestCount: 1,
             lastVerificationRequest: Date.now()
         })
         await user.save()
 
-        // Send Verification Email via Nodemailer
-        let frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
-        if (frontendUrl && !frontendUrl.startsWith('http')) {
-            frontendUrl = `https://${frontendUrl}`
-        }
-        const verificationLink = `${frontendUrl}/verify-email?token=${rawToken}`
-
         await sendEmail({
             to: user.email,
-            subject: 'Verify your CU Marketplace Account 🎓',
-            text: `Welcome to CU Marketplace!\n\nYou're almost there! We just need to verify your @cuchd.in email address to activate your account.\n\nPlease copy and paste this link into your browser to verify your email:\n${verificationLink}\n\nThis verification link will expire in 1 hour.\n\nThank you,\nCU Marketplace Team`,
+            subject: 'Your CU Market Verification Code 🎓',
+            text: `Welcome to CU Market!\n\nYour verification code is: ${rawOTP}\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\nCU Market Team`,
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-                    <h2 style="color: #111827; text-align: center;">Welcome to CU Marketplace!</h2>
-                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
-                        You're almost there! We just need to verify your <strong>@cuchd.in</strong> email address to activate your account.
-                    </p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="${verificationLink}" style="background-color: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                            Verify Email Address
-                        </a>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
-                        This verification link will expire in <strong>1 hour</strong>.
-                    </p>
-                    <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; word-break: break-all;">
-                        If the button doesn't work, copy and paste this link into your browser:<br/>
-                        <a href="${verificationLink}" style="color: #0b5cff;">${verificationLink}</a>
-                    </p>
-                </div>
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background-color:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#111827;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#1f2937;border-radius:16px;overflow:hidden;border:1px solid #374151;">
+        <!-- Header -->
+        <tr>
+          <td style="padding:32px 40px 24px;text-align:center;border-bottom:1px solid #374151;">
+            <div>
+              <span style="background:#EF4444;color:white;font-weight:800;font-size:20px;padding:7px 16px;border-radius:10px;letter-spacing:-0.5px;">CU</span>
+              <span style="color:#f9fafb;font-weight:700;font-size:20px;margin-left:10px;vertical-align:middle;">Marketplace</span>
+            </div>
+            <p style="color:#6b7280;font-size:12px;margin:10px 0 0;letter-spacing:0.5px;">EXCLUSIVELY FOR CHANDIGARH UNIVERSITY</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px 28px;">
+            <h1 style="color:#f9fafb;font-size:22px;font-weight:700;margin:0 0 10px;">Verify your email address</h1>
+            <p style="color:#9ca3af;font-size:15px;line-height:1.7;margin:0 0 28px;">Enter the code below to activate your <strong style="color:#e5e7eb;">@cuchd.in</strong> account. This code is valid for <strong style="color:#e5e7eb;">10 minutes</strong>.</p>
+            <!-- OTP Box -->
+            <div style="background:#111827;border:1px solid #374151;border-radius:12px;padding:30px 20px;text-align:center;margin-bottom:28px;">
+              <p style="color:#6b7280;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">Your Verification Code</p>
+              <span style="color:#EF4444;font-size:42px;font-weight:800;letter-spacing:14px;font-family:'Courier New',Courier,monospace;display:block;">${rawOTP}</span>
+            </div>
+            <div style="background:#374151;border-radius:8px;padding:14px 16px;">
+              <p style="color:#9ca3af;font-size:13px;margin:0;line-height:1.5;">⚠️ Never share this code with anyone. CU Market will never ask for your verification code.</p>
+            </div>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="border-top:1px solid #374151;padding:20px 40px;text-align:center;">
+            <p style="color:#6b7280;font-size:12px;margin:0;">Sent to <strong style="color:#9ca3af;">${user.email}</strong><br>If you didn't create an account, ignore this email.</p>
+            <p style="color:#4b5563;font-size:11px;margin:10px 0 0;">&copy; ${new Date().getFullYear()} CU Market &middot; Chandigarh University</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
             `
         })
 
@@ -112,19 +132,20 @@ export const register = async (req, res) => {
 // @access  Public
 export const verifyEmail = async (req, res) => {
     try {
-        const token = req.query.token || req.body.token
-        if (!token) return res.status(400).json({ error: 'Verification token is required' })
+        const { email, otp } = req.body
+        if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' })
 
-        // Hash incoming token to strictly compare with stored hash
-        const hashedIncomingToken = hashToken(token)
+        // Hash incoming OTP to strictly compare with stored hash
+        const hashedIncomingOTP = hashToken(otp)
 
         const user = await User.findOne({
-            emailVerificationToken: hashedIncomingToken,
+            email: email.toLowerCase(),
+            emailVerificationToken: hashedIncomingOTP,
             emailVerificationExpires: { $gt: Date.now() } // Ensure token is not expired
         })
 
         if (!user) {
-            return res.status(400).json({ error: 'Invalid or expired verification link.' })
+            return res.status(400).json({ error: 'Invalid or expired OTP.' })
         }
 
         // Set as verified and clear verification fields
@@ -135,15 +156,6 @@ export const verifyEmail = async (req, res) => {
 
         const authToken = signToken(user)
         const profile = profileToJSON(user)
-
-        // Redirect if it was a GET request
-        if (req.method === 'GET') {
-            let frontendUrl = process.env.VITE_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:5173'
-            if (frontendUrl && !frontendUrl.startsWith('http')) {
-                frontendUrl = `https://${frontendUrl}`
-            }
-            return res.redirect(`${frontendUrl}/verify-email?token=${token}&success=true`)
-        }
 
         return res.status(200).json({
             message: 'Email verified successfully',
@@ -186,9 +198,9 @@ export const resendVerification = async (req, res) => {
             return res.status(400).json({ error: 'Account is already verified. Please sign in.' })
         }
 
-        // Rate limit checks (Max 3 attempts per hour, 5 min cooldown)
-        const MAX_ATTEMPTS = 3
-        const COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+        // Rate limit checks (Max 5 attempts per hour, 1 min cooldown)
+        const MAX_ATTEMPTS = 5
+        const COOLDOWN_MS = 1 * 60 * 1000 // 1 minute
         const ONE_HOUR_MS = 60 * 60 * 1000 // 1 hour
 
         const now = Date.now()
@@ -209,45 +221,64 @@ export const resendVerification = async (req, res) => {
             return res.status(429).json({ error: 'You have exceeded the maximum resend attempts for this hour. Try again later.' })
         }
 
-        // Generate new token & expiry
-        const { rawToken, hashedToken } = generateVerificationToken()
-        user.emailVerificationToken = hashedToken
-        user.emailVerificationExpires = new Date(Date.now() + ONE_HOUR_MS) // 1 Hour
+        // Generate new OTP & expiry
+        const { rawOTP, hashedOTP } = generateOTP()
+        user.emailVerificationToken = hashedOTP
+        user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
         user.verificationRequestCount += 1
         user.lastVerificationRequest = new Date()
 
         await user.save()
 
-        // Send Verification Email via Nodemailer
-        let frontendUrl = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'
-        if (frontendUrl && !frontendUrl.startsWith('http')) {
-            frontendUrl = `https://${frontendUrl}`
-        }
-        const verificationLink = `${frontendUrl}/verify-email?token=${rawToken}`
-
         await sendEmail({
             to: user.email,
-            subject: 'Verify your CU Marketplace Account 🎓',
-            text: `Welcome to CU Marketplace!\n\nYou're almost there! We just need to verify your @cuchd.in email address to activate your account.\n\nPlease copy and paste this link into your browser to verify your email:\n${verificationLink}\n\nThis verification link will expire in 1 hour.\n\nThank you,\nCU Marketplace Team`,
+            subject: 'Your new CU Market Verification Code 🎓',
+            text: `Your new verification code is: ${rawOTP}\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\nCU Market Team`,
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-                    <h2 style="color: #111827; text-align: center;">Welcome to CU Marketplace!</h2>
-                    <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">
-                        You're almost there! We just need to verify your <strong>@cuchd.in</strong> email address to activate your account.
-                    </p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="${verificationLink}" style="background-color: #EF4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                            Verify Email Address
-                        </a>
-                    </div>
-                    <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
-                        This verification link will expire in <strong>1 hour</strong>.
-                    </p>
-                    <p style="color: #9ca3af; font-size: 12px; margin-top: 20px; word-break: break-all;">
-                        If the button doesn't work, copy and paste this link into your browser:<br/>
-                        <a href="${verificationLink}" style="color: #0b5cff;">${verificationLink}</a>
-                    </p>
-                </div>
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background-color:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#111827;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#1f2937;border-radius:16px;overflow:hidden;border:1px solid #374151;">
+        <!-- Header -->
+        <tr>
+          <td style="padding:32px 40px 24px;text-align:center;border-bottom:1px solid #374151;">
+            <div>
+              <span style="background:#EF4444;color:white;font-weight:800;font-size:20px;padding:7px 16px;border-radius:10px;letter-spacing:-0.5px;">CU</span>
+              <span style="color:#f9fafb;font-weight:700;font-size:20px;margin-left:10px;vertical-align:middle;">Marketplace</span>
+            </div>
+            <p style="color:#6b7280;font-size:12px;margin:10px 0 0;letter-spacing:0.5px;">EXCLUSIVELY FOR CHANDIGARH UNIVERSITY</p>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px 28px;">
+            <h1 style="color:#f9fafb;font-size:22px;font-weight:700;margin:0 0 10px;">Here's your new verification code</h1>
+            <p style="color:#9ca3af;font-size:15px;line-height:1.7;margin:0 0 28px;">You requested a new code. Enter it below to activate your <strong style="color:#e5e7eb;">@cuchd.in</strong> account. This code is valid for <strong style="color:#e5e7eb;">10 minutes</strong>.</p>
+            <!-- OTP Box -->
+            <div style="background:#111827;border:1px solid #374151;border-radius:12px;padding:30px 20px;text-align:center;margin-bottom:28px;">
+              <p style="color:#6b7280;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">Your Verification Code</p>
+              <span style="color:#EF4444;font-size:42px;font-weight:800;letter-spacing:14px;font-family:'Courier New',Courier,monospace;display:block;">${rawOTP}</span>
+            </div>
+            <div style="background:#374151;border-radius:8px;padding:14px 16px;">
+              <p style="color:#9ca3af;font-size:13px;margin:0;line-height:1.5;">⚠️ Never share this code with anyone. CU Market will never ask for your verification code.</p>
+            </div>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="border-top:1px solid #374151;padding:20px 40px;text-align:center;">
+            <p style="color:#6b7280;font-size:12px;margin:0;">Sent to <strong style="color:#9ca3af;">${user.email}</strong><br>If you didn't request this, ignore this email.</p>
+            <p style="color:#4b5563;font-size:11px;margin:10px 0 0;">&copy; ${new Date().getFullYear()} CU Market &middot; Chandigarh University</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
             `
         })
 
@@ -288,8 +319,8 @@ export const forgotPassword = async (req, res) => {
 
         await sendEmail({
             to: user.email,
-            subject: 'Password Reset Request - CU Marketplace 🔐',
-            text: `Need a new password?\n\nWe received a request to reset your password. Please copy and paste the following link into your browser to choose a new password:\n${resetLink}\n\nThis password reset link will expire in 1 hour.\n\nThank you,\nCU Marketplace Team`,
+            subject: 'Password Reset Request - CU Market 🔐',
+            text: `Need a new password?\n\nWe received a request to reset your password. Please copy and paste the following link into your browser to choose a new password:\n${resetLink}\n\nThis password reset link will expire in 1 hour.\n\nThank you,\nCU Market Team`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
                     <h2 style="color: #111827; text-align: center;">Need a new password?</h2>
@@ -376,7 +407,7 @@ export const login = async (req, res) => {
         }
 
         if (!user.isVerified) {
-            return res.status(403).json({ error: 'Please verify your email address first from the link sent to your inbox.' })
+            return res.status(403).json({ error: 'Please verify your email address first. Check your inbox for the OTP code.' })
         }
 
         const token = signToken(user)

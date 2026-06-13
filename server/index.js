@@ -24,9 +24,27 @@ await connectDB()
 const app = express()
 const PORT = process.env.PORT || 4000
 
+const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'https://cumarketplace.vercel.app',
+]
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow server-to-server requests (no origin) or whitelisted origins
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS'))
+        }
+    },
+    credentials: true,
+}
+
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
-    cors: { origin: true, credentials: true }
+    cors: corsOptions
 })
 
 // Track connected users: Map<userId, socketId>
@@ -56,7 +74,7 @@ io.on('connection', (socket) => {
 // Export for use in routes
 export { io, connectedUsers }
 
-app.use(cors({ origin: true, credentials: true }))
+app.use(cors(corsOptions))
 app.use(express.json())
 
 app.use('/api/auth', authRoutes)

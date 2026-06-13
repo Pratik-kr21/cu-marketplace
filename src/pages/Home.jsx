@@ -67,6 +67,7 @@ export default function Home() {
                             <span>✓ Campus verified</span>
                             <span>✓ Barter enabled</span>
                         </div>
+
                     </div>
                 </div>
             </section>

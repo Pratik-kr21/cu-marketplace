@@ -22,3 +22,13 @@ export const generateVerificationToken = () => {
 export const hashToken = (token) => {
     return crypto.createHash('sha256').update(token).digest('hex')
 }
+
+/**
+ * Generates a random 6-digit numeric OTP and its SHA-256 hash.
+ * @returns {Object} Object containing the raw OTP and the hashed OTP.
+ */
+export const generateOTP = () => {
+    const rawOTP = Math.floor(100000 + Math.random() * 900000).toString()
+    const hashedOTP = crypto.createHash('sha256').update(rawOTP).digest('hex')
+    return { rawOTP, hashedOTP }
+}

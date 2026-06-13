@@ -8,7 +8,7 @@ export async function authMiddleware(req, res, next) {
         return res.status(401).json({ error: 'Unauthorized' })
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret')
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
         const user = await User.findById(decoded.userId).select('-password')
         if (!user) return res.status(401).json({ error: 'User not found' })
         req.user = user
@@ -25,7 +25,7 @@ export async function optionalAuthMiddleware(req, res, next) {
         return next()
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret')
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
         const user = await User.findById(decoded.userId).select('-password')
         if (user) {
             req.user = user

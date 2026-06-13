@@ -43,13 +43,21 @@ export const useAuthStore = create((set, get) => ({
         return data
     },
 
-    verifyEmail: async (token) => {
+    verifyEmail: async (email, otp) => {
         if (!isBackendConfigured) {
             throw new Error('Backend is not configured. Set VITE_API_URL in .env')
         }
-        const data = await api.post('/api/auth/verify-email', { token })
+        const data = await api.post('/api/auth/verify-email', { email, otp })
         setToken(data.token)
         set({ user: { id: data.user.id, email: data.user.email, user_metadata: data.user.user_metadata }, profile: data.profile })
+        return data
+    },
+
+    resendVerification: async (email) => {
+        if (!isBackendConfigured) {
+            throw new Error('Backend is not configured. Set VITE_API_URL in .env')
+        }
+        const data = await api.post('/api/auth/resend-verification', { email })
         return data
     },
 

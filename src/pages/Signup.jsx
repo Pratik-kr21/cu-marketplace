@@ -15,7 +15,6 @@ export default function Signup() {
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const [success, setSuccess] = useState(false)
 
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(signupSchema),
@@ -24,46 +23,17 @@ export default function Signup() {
 
     const uid = watch('uid')
 
-    // Auto-derive email from UID whenever UID changes
-    useEffect(() => {
-        const clean = uid?.trim()
-        if (clean && clean.length >= 2) {
-            setValue('email', `${clean.toLowerCase()}@cuchd.in`, { shouldValidate: false })
-        } else {
-            setValue('email', '', { shouldValidate: false })
-        }
-    }, [uid, setValue])
-
-    const derivedEmail = uid?.trim() ? `${uid.trim().toLowerCase()}@cuchd.in` : null
-
     const onSubmit = async (data) => {
         setLoading(true)
         setError('')
         try {
             await signUp(data)
-            setSuccess(true)
+            navigate(`/verify-email?email=${encodeURIComponent(data.email || `${data.uid.trim().toLowerCase()}@cuchd.in`)}`)
         } catch (err) {
             setError(err.message || 'Signup failed. Please try again.')
         } finally {
             setLoading(false)
         }
-    }
-
-    if (success) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md w-full text-center animate-scale-in">
-                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle className="w-7 h-7 text-green-600" />
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Check your CUCHD Email!</h2>
-                    <p className="text-sm text-gray-500 mb-1">We've sent a verification link to:</p>
-                    <p className="text-sm font-semibold text-brand-red mb-6">{derivedEmail}</p>
-                    <p className="text-xs text-gray-400 mb-6">Click it to activate your account, then you can sign in.</p>
-                    <Link to="/login"><Button className="w-full">Go to Sign In</Button></Link>
-                </div>
-            </div>
-        )
     }
 
     return (
@@ -114,18 +84,15 @@ export default function Signup() {
                                 {...register('uid')}
                             />
                             {errors.uid && <p className="text-xs text-red-500">{errors.uid.message}</p>}
-
-                            {derivedEmail && (
-                                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 mt-0.5">
-                                    <AtSign className="w-4 h-4 text-brand-red flex-shrink-0" />
-                                    <span className="text-sm text-gray-700 font-medium">{derivedEmail}</span>
-                                    <span className="ml-auto text-xs text-green-600 font-semibold">Your login email</span>
-                                </div>
-                            )}
-                            {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-
-                            <input type="hidden" {...register('email')} />
                         </div>
+
+                        <Input
+                            label="College Email *"
+                            type="email"
+                            placeholder="e.g. 23bce10055@cuchd.in"
+                            error={errors.email?.message}
+                            {...register('email')}
+                        />
 
                         <Select label="Department *" error={errors.department?.message} {...register('department')}>
                             <option value="">Select your department...</option>
@@ -172,7 +139,7 @@ export default function Signup() {
                         <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
                             <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                             <p className="text-xs text-blue-700 leading-relaxed">
-                                Your login email is automatically set as <strong>UID@cuchd.in</strong>.
+                                Your login email must be exactly <strong>UID@cuchd.in</strong>.
                                 Make sure you can access this inbox for account verification.
                             </p>
                         </div>
