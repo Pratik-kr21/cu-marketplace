@@ -44,3 +44,16 @@ dist-ssr/
 
 # Server Uploads (if any local uploads happen in dev)
 server/uploads/
+
+# Android TWA / Bubblewrap
+android.keystore
+*.apk
+*.aab
+*.idsig
+app/
+gradle/
+gradlew
+gradlew.bat
+build.gradle
+settings.gradle
+gradle.properties

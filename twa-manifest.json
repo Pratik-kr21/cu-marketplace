@@ -1,0 +1,60 @@
+{
+  "packageId": "com.pratik.cumarket",
+  "host": "cumarketplace.vercel.app/",
+  "name": "CU market",
+  "launcherName": "CU market",
+  "display": "standalone",
+  "themeColor": "#C0392B",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://cumarketplace.vercel.app/android-chrome-512x512.png",
+  "maskableIconUrl": "https://cumarketplace.vercel.app/android-chrome-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "G:\\project\\college marketplae\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Browse Marketplace",
+      "shortName": "Browse",
+      "url": "https://cumarketplace.vercel.app/marketplace",
+      "chosenIconUrl": "https://cumarketplace.vercel.app/android-chrome-192x192.png"
+    },
+    {
+      "name": "Sell an Item",
+      "shortName": "Sell",
+      "url": "https://cumarketplace.vercel.app/create-listing",
+      "chosenIconUrl": "https://cumarketplace.vercel.app/android-chrome-192x192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://cumarketplace.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://cumarketplace.vercel.app/",
+  "minSdkVersion": 21,
+  "orientation": "portrait-primary",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
+}
