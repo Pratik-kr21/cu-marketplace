@@ -3,76 +3,37 @@ import { Download, X } from 'lucide-react'
 import Button from './Button'
 
 export default function InstallPWA() {
-    const [deferredPrompt, setDeferredPrompt] = useState(null)
     const [showInstall, setShowInstall] = useState(false)
 
     useEffect(() => {
-        // If already installed, do not show
+        // If already installed (standalone mode), do not show
         if (window.matchMedia('(display-mode: standalone)').matches) {
             return
         }
 
-        // Only show custom popup on mobile browsers
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '')
-        if (!isMobile) {
+        // Only show if user hasn't dismissed it or downloaded it before
+        const hasSeenPopup = localStorage.getItem('hideAppDownloadPopup')
+        if (hasSeenPopup) {
             return
         }
 
-        const handleReady = () => {
-            if (window.deferredPWAInstallPrompt) {
-                setDeferredPrompt(window.deferredPWAInstallPrompt)
-                setShowInstall(true)
-            }
+        // Only show custom popup on Android browsers
+        const isAndroid = /Android/i.test(navigator.userAgent || '')
+        if (!isAndroid) {
+            return
         }
 
-        const handler = (e) => {
-            e.preventDefault()
-            window.deferredPWAInstallPrompt = e
-            handleReady()
-        }
+        // Add a small delay so it doesn't pop up aggressively immediately
+        const timer = setTimeout(() => {
+            setShowInstall(true)
+        }, 2500)
 
-        // Check if it already fired before mount
-        if (window.deferredPWAInstallPrompt) {
-            handleReady()
-        }
-
-        // Listen for standard browser event
-        window.addEventListener('beforeinstallprompt', handler)
-        // Listen for our custom event from main.jsx
-        window.addEventListener('pwa-prompt-ready', handleReady)
-
-        // Clear showInstall if app is installed
-        window.addEventListener('appinstalled', () => {
-            setShowInstall(false)
-            setDeferredPrompt(null)
-        })
-
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handler)
-            window.removeEventListener('pwa-prompt-ready', handleReady)
-        }
+        return () => clearTimeout(timer)
     }, [])
-
-    const handleInstallClick = async () => {
-        if (!deferredPrompt) return
-
-        // Show the install prompt
-        deferredPrompt.prompt()
-
-        // Wait for the user to respond to the prompt
-        const { outcome } = await deferredPrompt.userChoice
-        console.log(`User response to the install prompt: ${outcome}`)
-
-        // We've used the prompt, and can't use it again, throw it away
-        setDeferredPrompt(null)
-        window.deferredPWAInstallPrompt = null
-        setShowInstall(false)
-    }
 
     const handleDismiss = () => {
         setShowInstall(false)
-        // Optionally clear the global if user says not now
-        // window.deferredPWAInstallPrompt = null
+        localStorage.setItem('hideAppDownloadPopup', 'true')
     }
 
     if (!showInstall) return null
@@ -83,10 +44,12 @@ export default function InstallPWA() {
                 <Download className="w-6 h-6" />
             </div>
             <div className="flex-1">
-                <h3 className="text-gray-900 font-bold text-sm mb-1">Install CU Market App</h3>
-                <p className="text-gray-500 text-xs leading-relaxed mb-3">Install our application on your home screen for quick and easy access when you're on the go.</p>
+                <h3 className="text-gray-900 font-bold text-sm mb-1">Download CU Market App</h3>
+                <p className="text-gray-500 text-xs leading-relaxed mb-3">Get our native Android app for a faster, fullscreen experience on the go.</p>
                 <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 py-1.5 text-xs" onClick={handleInstallClick}>Install App</Button>
+                    <a href="/cu-market-app.apk" download className="flex-1 block" onClick={handleDismiss}>
+                        <Button size="sm" className="w-full py-1.5 text-xs">Download APK</Button>
+                    </a>
                     <Button size="sm" variant="secondary" className="flex-1 py-1.5 text-xs" onClick={handleDismiss}>Not Now</Button>
                 </div>
             </div>

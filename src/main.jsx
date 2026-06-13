@@ -3,16 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
-// Capture the prompt globally as early as possible before React mounts
-window.deferredPWAInstallPrompt = null
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent default mini-infobar
-    e.preventDefault()
-    // Stash the event
-    window.deferredPWAInstallPrompt = e
-    // Dispatch a custom event so React can pick it up immediately
-    window.dispatchEvent(new Event('pwa-prompt-ready'))
-})
+// Removed old PWA install prompt logic since we use native APK
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
