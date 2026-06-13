@@ -24,6 +24,7 @@
         "zustand": "^4.5.0"
     },
     "devDependencies": {
+        "@bubblewrap/cli": "^1.24.1",
         "@vitejs/plugin-react": "^4.2.1",
         "autoprefixer": "^10.4.17",
         "postcss": "^8.4.35",
