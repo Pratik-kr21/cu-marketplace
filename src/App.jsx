@@ -8,6 +8,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import InstallPWA from './components/ui/InstallPWA'
 import NotificationPrompt from './components/ui/NotificationPrompt'
 import { connectSocket, disconnectSocket } from './lib/socket'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import Home from './pages/Home'
 import Marketplace from './pages/Marketplace'
@@ -120,6 +121,7 @@ export default function App() {
                     </Routes>
                 </main>
                 <Footer />
+                <SpeedInsights />
             </div>
         </BrowserRouter>
     )
