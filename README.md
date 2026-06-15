@@ -24,7 +24,7 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 <img src="https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white" alt="Zod" />
 <img src="https://img.shields.io/badge/PWA-5A0FC8?style=flat-square&logo=pwa&logoColor=white" alt="PWA" />
 <img src="https://img.shields.io/badge/Android_APK-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android APK" />
-<img src="https://img.shields.io/badge/Bubblewrap_TWA-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Bubblewrap TWA" />
+<img src="https://img.shields.io/badge/Jetpack_Compose-4285F4?style=flat-square&logo=android&logoColor=white" alt="Jetpack Compose" />
 <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
 
 <br/><br/>
@@ -92,9 +92,9 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 - **Offer system** — sellers can respond to requests by offering their listed items
 - **Direct fulfillment** — seamlessly bridge requests to the trade/chat system
 
-### 📱 Native Android App (Bubblewrap TWA)
+### 📱 Native Android App (Jetpack Compose)
 - **Standalone Android APK** available for direct download
-- **Trusted Web Activity (TWA)** integration for a seamless, URL-bar-free native experience
+- **Native Android UI** built from scratch using modern Jetpack Compose
 - **Digital Asset Links** configured for secure cryptographic app verification
 - **Native Push Notifications** utilizing Chrome's notification delegation
 - **Auto-updating** — app stays in sync with web deployments instantly
@@ -133,7 +133,7 @@ Buy, sell, barter, and connect — all within your university ecosystem.
 | **React Hook Form + Zod** | Form handling with schema validation |
 | **Lucide React** | Beautiful, consistent icon system |
 | **Vite PWA Plugin** | Service Worker & manifest generation |
-| **Bubblewrap CLI** | Trusted Web Activity (TWA) Android APK Generation |
+| **Jetpack Compose** | Native Android UI Toolkit |
 
 ### Backend
 
